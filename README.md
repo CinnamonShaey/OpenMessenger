@@ -11,14 +11,18 @@ window with a taskbar badge, tray icon and native notifications, wrapped around 
 own web client. Because it *is* Messenger's client, every feature works, including
 **voice and video calls** and screen sharing.
 
-> Not affiliated with or endorsed by Meta. "Messenger" is a trademark of Meta Platforms, Inc.
+> [!IMPORTANT]
+> **Not affiliated with Meta.** OpenMessenger is an independent, unofficial project. It is not
+> affiliated with, endorsed by, sponsored by or connected to Meta Platforms, Inc. in any way.
+> "Messenger" and "Facebook" are trademarks of Meta Platforms, Inc., used here only to describe
+> what the app works with. Use it at your own risk and in line with Meta's terms of service.
 
 > [!NOTE]
-> **This project was built with AI.** I wanted a proper Messenger desktop app for myself, so I
-> had an AI coding assistant (Claude, via the [Hermes](https://hermes-agent.nousresearch.com)
-> agent) write the code while I tested it and steered the design. I don't claim to have written it
-> by hand. It's shared in case it's useful to anyone else. Issues and pull requests are welcome,
-> but please read the code before you trust it with your account, as you would with any project.
+> **This project was built with AI.** I wanted a proper Messenger desktop app for myself, so an AI
+> coding assistant wrote the code while I tested it and steered the design. I don't claim to have
+> written it by hand. It's shared in case it's useful to anyone else. Issues and pull requests are
+> welcome, but please read the code before you trust it with your account, as you would with any
+> project.
 
 ## Features
 

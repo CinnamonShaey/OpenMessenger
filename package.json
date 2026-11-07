@@ -15,7 +15,7 @@
     "assets": "uv run --with pillow python scripts/make-assets.py"
   },
   "build": {
-    "appId": "io.github.openmessenger",
+    "appId": "io.github.cinnamonshaey.openmessenger",
     "productName": "OpenMessenger",
     "files": [
       "src/**",

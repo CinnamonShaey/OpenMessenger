@@ -7,9 +7,9 @@ const {
 const path = require('path');
 const fs = require('fs');
 
-// Dev runs use a different ID so Windows doesn't tie the real app's taskbar
-// icon to the generic electron.exe.
-const APP_ID = app.isPackaged ? 'OpenMessenger' : 'OpenMessenger.Dev';
+// Windows caches the taskbar icon per app ID. Dev runs (generic electron.exe)
+// use a separate ID so they can't poison the real app's cached icon.
+const APP_ID = app.isPackaged ? 'io.github.cinnamonshaey.openmessenger' : 'io.github.cinnamonshaey.openmessenger.dev';
 app.setName('OpenMessenger');
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
