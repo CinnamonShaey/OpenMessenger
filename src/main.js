@@ -398,16 +398,23 @@ function repairDesktopShortcut() {
 // Uses the normal per-user startup entry, so it also shows up (and can be
 // disabled) in Task Manager → Startup apps. Packaged builds only.
 const AUTOSTART_ARGS = ['--autostart'];
+const AUTOSTART_NAME = 'OpenMessenger'; // registry value name = what startup-app lists show
 function autostartSupported() {
   return app.isPackaged && (process.platform === 'win32' || process.platform === 'darwin');
 }
+const loginOpts = (extra = {}) => ({ path: process.execPath, args: AUTOSTART_ARGS, name: AUTOSTART_NAME, ...extra });
 function getAutostart() {
   if (!autostartSupported()) return false;
-  return app.getLoginItemSettings({ path: process.execPath, args: AUTOSTART_ARGS }).openAtLogin;
+  const s = app.getLoginItemSettings(loginOpts());
+  // executableWillLaunchAtLogin is false if the user disabled it in Task Manager
+  return process.platform === 'win32' ? !!s.executableWillLaunchAtLogin : s.openAtLogin;
 }
 function setAutostart(on) {
   if (!autostartSupported()) return;
-  app.setLoginItemSettings({ openAtLogin: on, path: process.execPath, args: AUTOSTART_ARGS });
+  // v0.2.0 registered under the app ID; clear that so there's never a duplicate.
+  app.setLoginItemSettings({ openAtLogin: false, path: process.execPath, args: AUTOSTART_ARGS, name: APP_ID });
+  // enabled:true also re-enables it if it had been switched off in Task Manager
+  app.setLoginItemSettings(loginOpts({ openAtLogin: on, enabled: on }));
 }
 
 // ------------------------------------------------------------------ settings
@@ -611,6 +618,10 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 
 app.whenReady().then(() => {
   registerOmProtocol();
+  // Migrate a v0.2.0 startup entry (named after the app ID) to the new name.
+  if (autostartSupported() && app.getLoginItemSettings({ path: process.execPath, args: AUTOSTART_ARGS, name: APP_ID }).openAtLogin) {
+    setAutostart(true);
+  }
   repairDesktopShortcut();
   setupSession();
   createTray();
