@@ -59,7 +59,10 @@ def make_icon(size: int) -> Image.Image:
 
 icon = make_icon(512)
 icon.save(ASSETS / "icon.png")
-icon.save(ASSETS / "icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+# bitmap_format="bmp": Windows' shell/taskbar don't reliably read PNG-compressed
+# entries inside an .exe icon resource and fall back to Electron's default icon.
+icon.save(ASSETS / "icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
+          bitmap_format="bmp")
 make_icon(32).save(ASSETS / "tray.png")
 
 

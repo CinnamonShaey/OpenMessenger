@@ -13,6 +13,13 @@ own web client. Because it *is* Messenger's client, every feature works, includi
 
 > Not affiliated with or endorsed by Meta. "Messenger" is a trademark of Meta Platforms, Inc.
 
+> [!NOTE]
+> **This project was built with AI.** I wanted a proper Messenger desktop app for myself, so I
+> had an AI coding assistant (Claude, via the [Hermes](https://hermes-agent.nousresearch.com)
+> agent) write the code while I tested it and steered the design. I don't claim to have written it
+> by hand. It's shared in case it's useful to anyone else. Issues and pull requests are welcome,
+> but please read the code before you trust it with your account, as you would with any project.
+
 ## Features
 
 - **Everything Messenger has.** Chats, groups, reactions, voice notes, stickers, calls.
