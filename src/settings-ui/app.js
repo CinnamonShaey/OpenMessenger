@@ -272,14 +272,27 @@ if (navigator.userAgent.includes('Windows') === false) $('shortcut').hidden = tr
 // ------------------------------------------------------------------ nav highlight
 const links = [...document.querySelectorAll('.sidebar a')];
 const main = document.querySelector('main');
+const setActive = (link) => links.forEach((a) => a.classList.toggle('active', a === link));
+let clickedLink = null; // keep a clicked item highlighted while smooth-scrolling to it
 main.addEventListener('scroll', () => {
+  const atBottom = main.scrollTop + main.clientHeight >= main.scrollHeight - 4;
+  if (clickedLink) return;
+  // The last section can be too short to reach the top, so at the very bottom it wins.
+  if (atBottom) { setActive(links[links.length - 1]); return; }
   let active = links[0];
   for (const a of links) {
     const sec = document.querySelector(a.getAttribute('href'));
     if (sec.offsetTop - main.scrollTop < 120) active = a;
   }
-  links.forEach((a) => a.classList.toggle('active', a === active));
+  setActive(active);
 });
+let clickTimer = 0;
+links.forEach((a) => a.addEventListener('click', () => {
+  clickedLink = a;
+  setActive(a);
+  clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => { clickedLink = null; }, 900); // after the smooth scroll settles
+}));
 
 // ------------------------------------------------------------------ init
 function render(s) {

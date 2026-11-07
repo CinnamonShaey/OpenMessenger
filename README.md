@@ -44,13 +44,13 @@ Messenger's features, calls included, the same as in a browser.
 
 ## Install (Windows)
 
-1. Download `OpenMessenger-x.y.z-win-x64-portable.zip` from [Releases](../../releases).
-2. Extract it anywhere you like, e.g. `D:\Apps\OpenMessenger`. Pick a folder you can write to.
+1. Download the Windows `.zip` from [Releases](../../releases).
+2. Extract it to a folder of your choice.
 3. Run `OpenMessenger.exe` and log in to Messenger.
 4. Optional: **Settings → Behavior → Create desktop shortcut**.
 
 > [!NOTE]
-> The app isn't code-signed (that costs money every year), so Windows SmartScreen may say
+> The app isn't code-signed, so Windows SmartScreen may say
 > *"Windows protected your PC"* the first time. Click **More info → Run anyway**.
 
 **Updating:** close OpenMessenger (tray icon → Quit), then extract the new version over the old
@@ -101,8 +101,12 @@ developer tools with `Ctrl+Shift+I`.
 - **Your password is never stored.** Like a browser, the app keeps Messenger's login session
   cookie. In release builds that cookie is **encrypted** with your Windows account (DPAPI), so a
   copied `data` folder can't be used to log in on another PC or user account.
-- **No telemetry.** OpenMessenger only talks to Meta's own Messenger/Facebook servers, the same as
-  messenger.com in a browser. Links to other sites open in your normal browser.
+- **OpenMessenger adds no telemetry.** The app itself collects nothing and sends nothing anywhere.
+  It only loads Meta's own Messenger/Facebook pages, and links to other sites open in your normal
+  browser.
+- **Meta's own tracking is untouched.** Messenger is Meta's web client running as-is, so whatever
+  data collection Meta does on messenger.com in a browser happens here too. OpenMessenger doesn't
+  block or change it.
 - **Locked-down window.** Messenger runs sandboxed and context-isolated, with no access to Node.js
   or your files. Camera, microphone, notification and screen-share permissions are granted only to
   Messenger/Facebook pages.
@@ -153,12 +157,13 @@ scripts/make-assets.py  generates everything in assets/ (no third-party artwork 
 scripts/cdp.js          poke at a running `npm run dev` build: evaluate JS, take screenshots
 ```
 
-### Releasing
+### Publishing a release
 
-Bump `version` in `package.json`, commit, then tag and push:
+For maintainers, including anyone publishing releases from their own fork. Bump `version` in
+`package.json`, commit, then push a matching tag:
 
 ```bash
-git tag v0.2.0
+git tag vX.Y.Z
 git push --tags
 ```
 
