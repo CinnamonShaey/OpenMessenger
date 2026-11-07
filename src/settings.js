@@ -13,6 +13,7 @@ const defaults = {
   recolorChats: false,      // force every conversation's bubbles to the accent
   sound: 'gentle.wav',      // file name in sounds/, or "" for silent
   volume: 0.5,
+  popups: true,             // show desktop notification pop-ups
   closeToTray: true,
   startMinimized: false,
   spellcheckLanguages: ['en-US', 'da'],

@@ -235,7 +235,7 @@ function renderThemes() {
 function renderSounds() {
   const box = $('sounds');
   box.textContent = '';
-  const items = [{ file: '', name: 'Silent' }, ...state.sounds];
+  const items = [{ file: '', name: 'Silent' }, { file: '__messenger__', name: 'Messenger default' }, ...state.sounds];
   for (const s of items) {
     const b = document.createElement('button');
     b.className = 'sound' + (state.settings.sound === s.file ? ' selected' : '');
@@ -264,7 +264,7 @@ $('volume').addEventListener('change', async (e) => {
 $('test').addEventListener('click', () => window.om.testSound());
 
 // ------------------------------------------------------------------ behaviour
-for (const key of ['recolorChats', 'closeToTray', 'startMinimized', 'startWithWindows']) {
+for (const key of ['recolorChats', 'popups', 'closeToTray', 'startMinimized', 'startWithWindows']) {
   $(key).addEventListener('change', (e) => { state.settings[key] = e.target.checked; window.om.set(key, e.target.checked); });
 }
 document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => window.om.open(b.dataset.open)));
@@ -301,6 +301,7 @@ function render(s) {
   state = s;
   $('version').textContent = `v${s.version}`;
   $('recolorChats').checked = s.settings.recolorChats;
+  $('popups').checked = s.settings.popups;
   $('closeToTray').checked = s.settings.closeToTray;
   $('startMinimized').checked = s.settings.startMinimized;
   $('startWithWindows').checked = s.settings.startWithWindows;

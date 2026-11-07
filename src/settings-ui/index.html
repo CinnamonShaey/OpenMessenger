@@ -81,6 +81,12 @@
 
     <section id="notifications">
       <h1>Notifications</h1>
+      <label class="toggle">
+        <input type="checkbox" id="popups">
+        <span class="switch"></span>
+        <span><strong>Show pop-up notifications</strong><small>A Windows notification with the sender and message when OpenMessenger isn't the active window. Click it to open the chat. When off, you still get the sound and the unread count.</small></span>
+      </label>
+      <h2>Sound</h2>
       <div class="sound-list" id="sounds"></div>
       <label class="field wide">
         <span>Volume <b id="volLabel"></b></span>
@@ -91,7 +97,7 @@
         <button class="ghost" data-open="sounds">Open sounds folder</button>
         <span class="hint">Add your own <code>.wav</code>/<code>.mp3</code> there, then reopen Settings.</span>
       </div>
-      <p class="hint">Also hearing Messenger's own sound? Turn it off in Messenger's own settings if it has one there, or set this to Silent.</p>
+      <p class="hint">Your sound replaces Messenger's own message sound. Pick "Messenger default" to keep Meta's sound instead.</p>
     </section>
 
     <section id="behavior">

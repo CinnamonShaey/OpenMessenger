@@ -32,11 +32,15 @@ Messenger's features, calls included, the same as in a browser.
 - **Any accent color.** Color wheel, brightness slider, hex/RGB input, 18 presets, or pick a color
   from anywhere on screen. It works with every theme, and you can optionally recolor every chat's
   message bubbles with it.
-- **Notification sounds.** Four gentle built-in sounds, or add your own. Adjustable volume.
-- **Desktop integration.** Native notifications (click to jump to the app), an unread count on
+- **Notification sounds.** Four gentle built-in sounds, your own, or Messenger's default.
+  Your choice replaces Messenger's own message sound. Adjustable volume.
+- **Desktop integration.** Native notifications whenever OpenMessenger isn't the active window,
+  like a background browser tab (click one to jump to the chat), an unread count on
   the taskbar icon, a tray icon, close-to-tray, and a **Settings** entry when you right-click the
   taskbar icon.
-- **Portable on Windows.** Everything lives in a `data` folder next to `OpenMessenger.exe`.
+- **Portable on Windows.** Your login, settings, themes and sounds live in a `data` folder next
+  to `OpenMessenger.exe`. Outside that folder, the app only writes two small registry entries
+  (see *Uninstalling*).
 - **Optional start with Windows.** Off by default, with an option to start minimized to the tray.
 - **Your own CSS themes.** They reload live while you edit them.
 - Right-click menu with spell-check suggestions, copy/save image, and open-link-in-browser.
@@ -57,8 +61,17 @@ Messenger's features, calls included, the same as in a browser.
 folder. Your `data` folder, including your login, is kept.
 
 **Uninstalling:** turn off *Start with Windows* if you enabled it, quit the app, then delete the
-folder (and the desktop shortcut, if you made one). The app itself writes nothing else to your
-system. Windows keeps its own small records, like your notification preferences for the app.
+folder (and the desktop shortcut, if you made one).
+
+Outside its folder, OpenMessenger only writes two small registry entries under your user account:
+
+- `HKCU\Software\Classes\AppUserModelId\io.github.cinnamonshaey.openmessenger` gives the app's
+  name and icon to Windows, which needs it to show notifications from apps that aren't installed
+  with an installer. It's harmless to leave, or you can delete it in `regedit` for a fully clean
+  removal.
+- The *Start with Windows* entry, only if you turned that on. Turning it off removes it.
+
+Windows also keeps its own small records, like your notification preferences for the app.
 
 ### macOS and Linux (experimental)
 
@@ -76,7 +89,7 @@ from the menu bar (press `Alt`):
 | --- | --- |
 | Appearance | Theme cards with a preview, plus a button to open the themes folder |
 | Accent color | Color wheel, brightness, hex/RGB, presets, pick-from-screen, "use theme's suggestion", recolor chats |
-| Notifications | Pick a sound (click to hear it), volume, play button, open the sounds folder |
+| Notifications | Pop-up notifications on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
 | Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
 
 Other shortcuts: zoom with `Ctrl +` / `Ctrl -` / `Ctrl 0`, reload the theme with `Ctrl+Shift+R`,
@@ -84,9 +97,6 @@ developer tools with `Ctrl+Shift+I`.
 
 > **Moved the app folder?** Turn *Start with Windows* off and on again so it points to the new
 > location.
-
-> **Hearing Messenger's own sound too?** Turn it off in Messenger's own settings if it offers that,
-> or set OpenMessenger's sound to *Silent*.
 
 ## Custom themes and sounds
 
@@ -116,11 +126,17 @@ developer tools with `Ctrl+Shift+I`.
 ## How it works
 
 OpenMessenger loads `messenger.com` in a Chromium window and reports a standard Chrome user agent,
-so Meta serves its normal web client. A small preload script wraps the page's `Notification` API.
-The Windows notification stays silent and your chosen sound plays instead. Themes are injected as
-stylesheets that override Messenger's own CSS variables. The accent color is generated as a
-separate layer on top, including CSS-filter values for the icons Meta tints with filters rather
-than colors.
+so Meta serves its normal web client. A small preload script does three things:
+
+- While the window isn't active, it tells Messenger the page is in the background, so Messenger
+  shows its normal desktop notifications, the same as for a background browser tab.
+- It wraps the page's `Notification` API, so the Windows notification stays silent and your chosen
+  sound plays instead.
+- It swaps Messenger's short message sound for yours. Call ringtones are left alone.
+
+Themes are injected as stylesheets that override Messenger's own CSS variables. The accent color
+is generated as a separate layer on top, including CSS-filter values for the icons Meta tints with
+filters rather than colors.
 
 ## Development
 

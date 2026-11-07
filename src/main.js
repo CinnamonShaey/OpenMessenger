@@ -174,18 +174,33 @@ function watchTheme() {
 }
 
 // ------------------------------------------------------------------ sound
-function soundPayload() {
+const MESSENGER_SOUND = '__messenger__'; // settings value for "Messenger default"
+
+function soundPayload(wc) {
   const name = settings.get('sound');
-  const file = name && sounds().get(name);
   let data = null;
-  if (file) { try { data = fs.readFileSync(file); } catch {} }
-  return { data, volume: settings.get('volume') };
+  let mode = 'silent';
+  if (name === MESSENGER_SOUND) {
+    mode = 'messenger';
+  } else if (name) {
+    const file = sounds().get(name);
+    if (file) { try { data = fs.readFileSync(file); mode = 'custom'; } catch {} }
+  }
+  const isMain = !!(mainWindow && !mainWindow.isDestroyed() && wc === mainWindow.webContents);
+  return { data, volume: settings.get('volume'), mode, isMain, popups: settings.get('popups') };
 }
 
 function sendSound(wc) {
-  if (wc && !wc.isDestroyed()) wc.send('om:sound', soundPayload());
+  if (wc && !wc.isDestroyed()) wc.send('om:sound', soundPayload(wc));
 }
 const sendSoundEverywhere = () => allWindows().forEach((w) => sendSound(w.webContents));
+
+// Tell the page whether the window is in the background (not the active
+// window), so Messenger shows desktop notifications like a background tab.
+function sendBackground() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('om:background', !mainWindow.isFocused());
+}
 
 // ------------------------------------------------------------------ unread badge
 function updateUnread(title) {
@@ -255,7 +270,7 @@ function webPreferences() {
 function wireContents(wc) {
   wc.setUserAgent(USER_AGENT);
   attachContextMenu(wc);
-  wc.on('dom-ready', () => { applyTheme(wc); sendSound(wc); });
+  wc.on('dom-ready', () => { applyTheme(wc); sendSound(wc); sendBackground(); });
 
   wc.on('will-navigate', (e, url) => {
     if (!isInternal(url)) { e.preventDefault(); openExternal(url); }
@@ -396,6 +411,22 @@ function repairDesktopShortcut() {
   } catch { /* no shortcut */ }
 }
 
+// ------------------------------------------------------------------ notification registration
+// Windows only displays notifications from an unpackaged app if its
+// AppUserModelID is registered (name + icon). Without this, notifications are
+// accepted and then silently dropped. Re-written each launch so the icon path
+// follows the app if its folder is moved.
+function registerNotificationIdentity() {
+  if (process.platform !== 'win32' || !app.isPackaged) return;
+  const key = `HKCU\\Software\\Classes\\AppUserModelId\\${APP_ID}`;
+  const icon = path.join(paths.assets, 'icon.png');
+  const { execFile } = require('child_process');
+  const add = (name, value) => new Promise((resolve) => {
+    execFile('reg.exe', ['add', key, '/v', name, '/t', 'REG_SZ', '/d', value, '/f'], { windowsHide: true }, () => resolve());
+  });
+  add('DisplayName', 'OpenMessenger').then(() => add('IconUri', icon));
+}
+
 // ------------------------------------------------------------------ start with Windows
 // Uses the normal per-user startup entry, so it also shows up (and can be
 // disabled) in Task Manager → Startup apps. Packaged builds only.
@@ -441,6 +472,7 @@ function applySetting(key, value) {
       break;
     case 'sound':
     case 'volume':
+    case 'popups':
       sendSoundEverywhere();
       break;
     default:
@@ -462,6 +494,7 @@ function settingsState() {
       recolorChats: settings.get('recolorChats'),
       sound: settings.get('sound'),
       volume: settings.get('volume'),
+      popups: settings.get('popups'),
       closeToTray: settings.get('closeToTray'),
       startMinimized: settings.get('startMinimized'),
       startWithWindows: getAutostart(),
@@ -514,7 +547,7 @@ function openSettings() {
 
 ipcMain.handle('settings:get', () => settingsState());
 ipcMain.handle('settings:set', (_e, key, value) => {
-  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'closeToTray', 'startMinimized', 'startWithWindows'];
+  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'popups', 'closeToTray', 'startMinimized', 'startWithWindows'];
   if (!allowed.includes(key)) return false;
   if (key === 'volume') value = Math.min(1, Math.max(0, Number(value) || 0));
   if (key === 'accent' && !/^#[0-9a-f]{6}$/i.test(value)) return false;
@@ -602,9 +635,8 @@ function createTray() {
 
 // ------------------------------------------------------------------ IPC
 ipcMain.on('om:notification-click', showMain);
-ipcMain.on('om:notified', () => {
-  if (mainWindow && !mainWindow.isFocused()) mainWindow.flashFrame(true);
-});
+// The unread badge on the taskbar icon is the indicator; no blinking taskbar button.
+ipcMain.on('om:notified', () => {});
 
 // ------------------------------------------------------------------ lifecycle
 app.on('second-instance', (_e, argv) => {
@@ -620,6 +652,7 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 
 app.whenReady().then(() => {
   registerOmProtocol();
+  registerNotificationIdentity();
   // Migrate a v0.2.0 startup entry (named after the app ID) to the new name.
   if (autostartSupported() && app.getLoginItemSettings({ path: process.execPath, args: AUTOSTART_ARGS, name: APP_ID }).openAtLogin) {
     setAutostart(true);
@@ -630,7 +663,10 @@ app.whenReady().then(() => {
   rebuildMenus();
   createMainWindow();
   watchTheme();
-  mainWindow.on('focus', () => mainWindow.flashFrame(false));
+  mainWindow.on('focus', sendBackground);
+  mainWindow.on('blur', sendBackground);
+  mainWindow.on('show', sendBackground);
+  mainWindow.on('hide', sendBackground);
   if (process.argv.includes('--settings')) openSettings();
 
   // Right-click the taskbar icon -> "Settings"
