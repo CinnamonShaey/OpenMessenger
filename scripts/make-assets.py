@@ -56,7 +56,15 @@ def make_icon(size: int) -> Image.Image:
     hole = Image.new("L", (s, s), 0)
     ImageDraw.Draw(hole).ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], fill=255)
     img.paste(grad, (0, 0), hole)
-    return img.resize((size, size), Image.LANCZOS)
+
+    # Trim the transparent margin so the bubble fills the canvas edge to edge,
+    # like other round app icons (Spotify, Discord). Design is unchanged.
+    bbox = img.getbbox()
+    img = img.crop(bbox)
+    side = max(img.size)
+    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    square.paste(img, ((side - img.width) // 2, (side - img.height) // 2))
+    return square.resize((size, size), Image.LANCZOS)
 
 
 icon = make_icon(512)
