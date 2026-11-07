@@ -94,16 +94,16 @@ make_badge("9+").save(BADGES / "9plus.png")
 RATE = 44100
 
 
-def write_wav(path: Path, samples):
+def write_wav(path: Path, samples, level=0.8):
     peak = max(1e-9, max(abs(x) for x in samples))
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
         w.setframerate(RATE)
-        w.writeframes(b"".join(struct.pack("<h", int(x / peak * 0.8 * 32767)) for x in samples))
+        w.writeframes(b"".join(struct.pack("<h", int(x / peak * level * 32767)) for x in samples))
 
 
-def tone(freq, dur, decay, start_freq=None, harmonics=((1, 1.0),)):
+def tone(freq, dur, decay, start_freq=None, harmonics=((1, 1.0),), attack=0.004):
     out = []
     n = int(RATE * dur)
     phase = 0.0
@@ -111,7 +111,9 @@ def tone(freq, dur, decay, start_freq=None, harmonics=((1, 1.0),)):
         t = i / RATE
         f = freq if start_freq is None else start_freq + (freq - start_freq) * min(1, t / 0.03)
         phase += 2 * math.pi * f / RATE
-        env = min(1, t / 0.004) * math.exp(-t * decay)
+        # smooth (sine-shaped) fade-in, then exponential decay
+        rise = 1.0 if t >= attack else math.sin(0.5 * math.pi * t / attack)
+        env = rise * math.exp(-t * decay)
         out.append(env * sum(a * math.sin(phase * k) for k, a in harmonics))
     return out
 
@@ -127,13 +129,22 @@ def mix(*parts):
     return out
 
 
-# Pop: short bubbly blip with a quick upward pitch sweep
-write_wav(SOUNDS / "pop.wav", tone(880, 0.18, 28, start_freq=520, harmonics=((1, 1), (2, 0.15))))
+# Gentle (default): soft, low two-note "bloop" with a slow fade-in and no
+# sharp transient. Deliberately quiet so it doesn't startle.
+pure = ((1, 1), (2, 0.04))
+write_wav(SOUNDS / "gentle.wav", mix(
+    (0, tone(523.25, 0.35, 9, harmonics=pure, attack=0.025)),      # C5
+    (0.13, tone(659.25, 0.45, 8, harmonics=pure, attack=0.025)),   # E5
+), level=0.35)
+# Pop: short bubbly blip with an upward pitch sweep (softened)
+write_wav(SOUNDS / "pop.wav", tone(780, 0.2, 22, start_freq=520, harmonics=((1, 1), (2, 0.08)), attack=0.012), level=0.5)
 # Chime: two-note bell (E6 -> A6)
 bell = ((1, 1), (2.01, 0.35), (3.02, 0.12))
-write_wav(SOUNDS / "chime.wav", mix((0, tone(1318.5, 0.6, 7, harmonics=bell)), (0.11, tone(1760, 0.8, 6, harmonics=bell))))
+write_wav(SOUNDS / "chime.wav", mix((0, tone(1318.5, 0.6, 7, harmonics=bell, attack=0.008)),
+                                     (0.11, tone(1760, 0.8, 6, harmonics=bell, attack=0.008))), level=0.45)
 # Soft: mellow low double-tap
 soft = ((1, 1), (2, 0.08))
-write_wav(SOUNDS / "soft.wav", mix((0, tone(587, 0.25, 18, harmonics=soft)), (0.12, tone(784, 0.3, 16, harmonics=soft))))
+write_wav(SOUNDS / "soft.wav", mix((0, tone(587, 0.25, 18, harmonics=soft, attack=0.015)),
+                                    (0.12, tone(784, 0.3, 16, harmonics=soft, attack=0.015))), level=0.5)
 
 print("assets written to", ASSETS)

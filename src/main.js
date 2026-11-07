@@ -373,7 +373,7 @@ function settingsMenu() {
   }
   const vol = Math.round(settings.get('volume') * 100);
   soundItems.push({ type: 'separator' },
-    { label: 'Volume', submenu: [25, 50, 70, 100].map((v) => ({ label: `${v}%`, type: 'radio', checked: vol === v,
+    { label: 'Volume', submenu: [10, 25, 50, 75, 100].map((v) => ({ label: `${v}%`, type: 'radio', checked: vol === v,
       click: () => { settings.set('volume', v / 100); sendSoundEverywhere(); mainWindow && mainWindow.webContents.send('om:play'); } })) },
     { label: 'Test sound', click: () => mainWindow && mainWindow.webContents.send('om:play') },
     { label: 'Open sounds folder', click: () => shell.openPath(paths.userSounds) },

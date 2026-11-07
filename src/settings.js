@@ -7,8 +7,8 @@ const file = path.join(dataDir, 'settings.json');
 const defaults = {
   startUrl: 'https://www.messenger.com/',
   theme: 'oled-purple.css', // file name in themes/, or "" for none
-  sound: 'pop.wav',         // file name in sounds/, or "" for silent
-  volume: 0.7,
+  sound: 'gentle.wav',      // file name in sounds/, or "" for silent
+  volume: 0.5,
   closeToTray: true,
   startMinimized: false,
   spellcheckLanguages: ['en-US', 'da'],
