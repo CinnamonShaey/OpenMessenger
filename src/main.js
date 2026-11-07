@@ -7,7 +7,9 @@ const {
 const path = require('path');
 const fs = require('fs');
 
-const APP_ID = 'OpenMessenger';
+// Dev runs use a different ID so Windows doesn't tie the real app's taskbar
+// icon to the generic electron.exe.
+const APP_ID = app.isPackaged ? 'OpenMessenger' : 'OpenMessenger.Dev';
 app.setName('OpenMessenger');
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
@@ -351,6 +353,19 @@ function createDesktopShortcut() {
   dialog.showMessageBox({ message: ok ? 'Desktop shortcut created.' : 'Could not create the shortcut.' });
 }
 
+// Stamp our app ID onto an existing desktop shortcut that points at this exe.
+// Windows then takes the taskbar icon from the shortcut, not a cached guess.
+function repairDesktopShortcut() {
+  if (process.platform !== 'win32' || !app.isPackaged) return;
+  const lnk = path.join(app.getPath('desktop'), 'OpenMessenger.lnk');
+  try {
+    const cur = shell.readShortcutLink(lnk);
+    if (path.resolve(cur.target).toLowerCase() !== process.execPath.toLowerCase()) return;
+    if (cur.appUserModelId === APP_ID) return;
+    shell.writeShortcutLink(lnk, 'update', { appUserModelId: APP_ID, icon: process.execPath, iconIndex: 0 });
+  } catch { /* no shortcut */ }
+}
+
 function settingsMenu() {
   const themeItems = [{ label: 'None (Messenger default)', type: 'radio', checked: !settings.get('theme'),
     click: () => { settings.set('theme', ''); applyThemeEverywhere(); } }];
@@ -448,6 +463,7 @@ app.on('activate', showMain); // macOS dock click
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
 app.whenReady().then(() => {
+  repairDesktopShortcut();
   setupSession();
   createTray();
   rebuildMenus();

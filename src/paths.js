@@ -10,6 +10,9 @@ const path = require('path');
 const fs = require('fs');
 
 const appRoot = path.join(__dirname, '..'); // bundled code + built-in themes/sounds
+// Windows can't load .ico/.png for window/tray icons from inside app.asar,
+// so assets are unpacked next to it (see "asarUnpack" in package.json).
+const unpackedRoot = appRoot.replace(/app\.asar$/, 'app.asar.unpacked');
 const exeDir = app.isPackaged ? path.dirname(process.execPath) : appRoot;
 const dataDir = process.env.OPENMESSENGER_DATA || path.join(exeDir, 'data');
 
@@ -17,10 +20,10 @@ const dirs = {
   appRoot,
   dataDir,
   builtinThemes: path.join(appRoot, 'themes'),
-  builtinSounds: path.join(appRoot, 'assets', 'sounds'),
+  builtinSounds: path.join(unpackedRoot, 'assets', 'sounds'),
   userThemes: path.join(dataDir, 'themes'),
   userSounds: path.join(dataDir, 'sounds'),
-  assets: path.join(appRoot, 'assets'),
+  assets: path.join(unpackedRoot, 'assets'),
 };
 
 for (const d of [dataDir, dirs.userThemes, dirs.userSounds]) fs.mkdirSync(d, { recursive: true });
