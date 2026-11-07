@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' om: data:">
+  <title>OpenMessenger Settings</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="brand"><img src="om://assets/icon.png" alt=""><span>OpenMessenger</span></div>
+    <a href="#appearance" class="active">Appearance</a>
+    <a href="#accent">Accent color</a>
+    <a href="#notifications">Notifications</a>
+    <a href="#behavior">Behavior</a>
+    <div class="version" id="version"></div>
+  </nav>
+
+  <main>
+    <section id="appearance">
+      <h1>Appearance</h1>
+      <p class="hint">Themes only apply once you're logged in. Changes show up instantly.</p>
+      <div class="theme-grid" id="themes"></div>
+      <div class="row-actions">
+        <button class="ghost" data-open="themes">Open themes folder</button>
+        <span class="hint">Drop your own <code>.css</code> themes there. See the themes README.</span>
+      </div>
+    </section>
+
+    <section id="accent">
+      <h1>Accent color</h1>
+      <p class="hint">Used for buttons, links, the selected chat, toggles and highlights.</p>
+
+      <div class="picker">
+        <div class="wheel-wrap">
+          <canvas id="wheel" width="240" height="240"></canvas>
+          <div class="wheel-dim" id="wheelDim"></div>
+          <div class="marker" id="marker"></div>
+        </div>
+
+        <div class="picker-side">
+          <div class="current">
+            <div class="current-swatch" id="currentSwatch"></div>
+            <div>
+              <div class="current-label">Current</div>
+              <div class="current-hex" id="currentHex"></div>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Brightness</span>
+            <input type="range" id="brightness" min="0" max="100" step="1">
+          </label>
+
+          <div class="inputs">
+            <label class="field hex"><span>Hex</span><input id="hex" spellcheck="false" maxlength="7" placeholder="#a855f7"></label>
+            <label class="field num"><span>R</span><input id="r" type="number" min="0" max="255"></label>
+            <label class="field num"><span>G</span><input id="g" type="number" min="0" max="255"></label>
+            <label class="field num"><span>B</span><input id="b" type="number" min="0" max="255"></label>
+          </div>
+
+          <div class="picker-buttons">
+            <button class="ghost" id="eyedropper" hidden>Pick from screen</button>
+            <button class="ghost" id="themeAccent">Use theme's suggestion</button>
+          </div>
+        </div>
+      </div>
+
+      <h2>Presets</h2>
+      <div class="presets" id="presets"></div>
+
+      <label class="toggle">
+        <input type="checkbox" id="recolorChats">
+        <span class="switch"></span>
+        <span>
+          <strong>Recolor chats with the accent</strong>
+          <small>Makes your message bubbles in every chat use the accent, instead of each chat's own Messenger theme.</small>
+        </span>
+      </label>
+    </section>
+
+    <section id="notifications">
+      <h1>Notifications</h1>
+      <div class="sound-list" id="sounds"></div>
+      <label class="field wide">
+        <span>Volume <b id="volLabel"></b></span>
+        <input type="range" id="volume" min="0" max="100" step="5">
+      </label>
+      <div class="row-actions">
+        <button id="test">Play sound</button>
+        <button class="ghost" data-open="sounds">Open sounds folder</button>
+        <span class="hint">Add your own <code>.wav</code>/<code>.mp3</code> there, then reopen Settings.</span>
+      </div>
+      <p class="hint">Hearing two sounds? Turn off Messenger's own message sounds in Messenger's preferences.</p>
+    </section>
+
+    <section id="behavior">
+      <h1>Behavior</h1>
+      <label class="toggle">
+        <input type="checkbox" id="closeToTray">
+        <span class="switch"></span>
+        <span><strong>Close button hides to tray</strong><small>Keeps receiving messages in the background. Quit from the tray icon.</small></span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="startMinimized">
+        <span class="switch"></span>
+        <span><strong>Start minimized to tray</strong><small>Opens hidden, with only the tray icon.</small></span>
+      </label>
+      <div class="row-actions">
+        <button class="ghost" id="shortcut">Create desktop shortcut</button>
+        <button class="ghost" data-open="data">Open data folder</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

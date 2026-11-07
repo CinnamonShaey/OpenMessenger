@@ -1,0 +1,26 @@
+/*
+ * @name Light
+ * @description Clean and bright, for daytime.
+ * @mode light
+ * @swatches #ffffff #ececf0 #0f0f14
+ * @accent #7c3aed
+ * @extends _meta-light.css
+ * @extends _base.css
+ *
+ * Edit the palette below. "@accent" is only the suggested accent colour;
+ * the one you pick in Settings wins.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  --om-bg: #ffffff;
+  --om-surface: #f5f5f7;
+  --om-raised: #ececf0;
+  --om-border: #e0e0e6;
+  --om-text: #0f0f14;
+  --om-text-dim: #65676b;
+  --om-placeholder: #8a8d91;
+}

@@ -6,7 +6,9 @@ const file = path.join(dataDir, 'settings.json');
 
 const defaults = {
   startUrl: 'https://www.messenger.com/',
-  theme: 'oled-purple.css', // file name in themes/, or "" for none
+  theme: 'oled.css',        // file name in themes/, or "" for none
+  accent: '#a855f7',        // any CSS hex colour
+  recolorChats: false,      // force every conversation's bubbles to the accent
   sound: 'gentle.wav',      // file name in sounds/, or "" for silent
   volume: 0.5,
   closeToTray: true,
@@ -21,6 +23,13 @@ try {
   current = { ...defaults, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
 } catch {
   /* first run or unreadable: use defaults */
+}
+
+// v0.1 shipped "OLED Purple" themes; they became OLED + a purple accent.
+if (current.theme === 'oled-purple.css' || current.theme === 'oled-purple-all-chats.css') {
+  current.recolorChats = current.theme === 'oled-purple-all-chats.css';
+  current.theme = 'oled.css';
+  current.accent = '#a855f7';
 }
 
 let saveTimer = null;

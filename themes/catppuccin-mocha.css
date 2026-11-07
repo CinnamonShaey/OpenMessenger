@@ -1,0 +1,25 @@
+/*
+ * @name Catppuccin Mocha
+ * @description Soft pastel dark theme (catppuccin.com).
+ * @mode dark
+ * @swatches #1e1e2e #313244 #cdd6f4
+ * @accent #cba6f7
+ * @extends _base.css
+ *
+ * Edit the palette below. "@accent" is only the suggested accent colour;
+ * the one you pick in Settings wins.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  --om-bg: #1e1e2e;
+  --om-surface: #181825;
+  --om-raised: #313244;
+  --om-border: #45475a;
+  --om-text: #cdd6f4;
+  --om-text-dim: #a6adc8;
+  --om-placeholder: #7f849c;
+}

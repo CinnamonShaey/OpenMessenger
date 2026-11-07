@@ -1,0 +1,25 @@
+/*
+ * @name Midnight
+ * @description Deep blue-black, easy on the eyes at night.
+ * @mode dark
+ * @swatches #0b0e14 #181d28 #e6e9ef
+ * @accent #6366f1
+ * @extends _base.css
+ *
+ * Edit the palette below. "@accent" is only the suggested accent colour;
+ * the one you pick in Settings wins.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  --om-bg: #0b0e14;
+  --om-surface: #10141c;
+  --om-raised: #181d28;
+  --om-border: #242b39;
+  --om-text: #e6e9ef;
+  --om-text-dim: #8b93a7;
+  --om-placeholder: #5f677a;
+}

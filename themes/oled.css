@@ -1,0 +1,25 @@
+/*
+ * @name OLED
+ * @description Pure black. Pixels off on OLED screens.
+ * @mode dark
+ * @swatches #000000 #141418 #ececf1
+ * @accent #a855f7
+ * @extends _base.css
+ *
+ * Edit the palette below. "@accent" is only the suggested accent colour;
+ * the one you pick in Settings wins.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  --om-bg: #000000;
+  --om-surface: #0a0a0c;
+  --om-raised: #141418;
+  --om-border: #1f1f26;
+  --om-text: #ececf1;
+  --om-text-dim: #9d9daa;
+  --om-placeholder: #6b6b78;
+}

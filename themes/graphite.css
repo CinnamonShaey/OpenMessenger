@@ -1,0 +1,25 @@
+/*
+ * @name Graphite
+ * @description Neutral dark grey, Discord-style.
+ * @mode dark
+ * @swatches #1e1f22 #2b2d31 #f2f3f5
+ * @accent #5865f2
+ * @extends _base.css
+ *
+ * Edit the palette below. "@accent" is only the suggested accent colour;
+ * the one you pick in Settings wins.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  --om-bg: #1e1f22;
+  --om-surface: #232428;
+  --om-raised: #2b2d31;
+  --om-border: #3a3c42;
+  --om-text: #f2f3f5;
+  --om-text-dim: #b5bac1;
+  --om-placeholder: #80848e;
+}

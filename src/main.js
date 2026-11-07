@@ -1,11 +1,36 @@
 const paths = require('./paths'); // must be first: redirects all app data into data\
 const settings = require('./settings');
+const themeEngine = require('./theme');
 const {
   app, BrowserWindow, Tray, Menu, shell, ipcMain, nativeImage, session,
-  desktopCapturer, dialog, clipboard,
+  desktopCapturer, dialog, clipboard, protocol,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+// The Settings UI is served from a private om:// scheme (file:// is locked
+// down by the grantFileProtocolExtraPrivileges fuse).
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'om', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+]);
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png',
+  '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.wav': 'audio/wav' };
+function registerOmProtocol() {
+  const roots = { settings: path.join(__dirname, 'settings-ui'), assets: paths.assets };
+  protocol.handle('om', (req) => {
+    const u = new URL(req.url);
+    const root = roots[u.hostname];
+    const file = root && path.normalize(path.join(root, decodeURIComponent(u.pathname)));
+    if (!file || !file.startsWith(root + path.sep)) return new Response('Not found', { status: 404 });
+    try {
+      return new Response(fs.readFileSync(file), {
+        headers: { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' },
+      });
+    } catch {
+      return new Response('Not found', { status: 404 });
+    }
+  });
+}
 
 // Windows caches the taskbar icon per app ID. Dev runs (generic electron.exe)
 // use a separate ID so they can't poison the real app's cached icon.
@@ -57,25 +82,16 @@ function openExternal(url) {
 }
 
 function listFiles(dirs, exts) {
-  const seen = new Map();
-  for (const dir of dirs) {
-    try {
-      for (const f of fs.readdirSync(dir)) {
-        if (exts.includes(path.extname(f).toLowerCase())) seen.set(f, path.join(dir, f));
-      }
-    } catch { /* missing dir */ }
-  }
-  return seen; // name -> full path (user files override built-ins with same name)
+  return themeEngine.listFiles(dirs, exts);
 }
-const themes = () => listFiles([paths.builtinThemes, paths.userThemes], ['.css']);
 const sounds = () => listFiles([paths.builtinSounds, paths.userSounds], ['.wav', '.mp3', '.ogg', '.m4a', '.flac']);
+const prettyName = themeEngine.prettyName;
 
-function prettyName(file) {
-  return path.basename(file, path.extname(file)).replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
+let settingsWindow = null;
 
+// Messenger windows only (main window + call popups), never the Settings window.
 function allWindows() {
-  return BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed());
+  return BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed() && w !== settingsWindow);
 }
 
 function showMain() {
@@ -86,24 +102,11 @@ function showMain() {
 }
 
 // ------------------------------------------------------------------ theme
-const cssKeys = new WeakMap(); // webContents -> inserted css key
+// Two stylesheets per window: the theme (palette + Meta variable mapping) and
+// a small generated accent layer, so accent previews only swap the small one.
+const injected = new WeakMap(); // webContents -> { theme, accent } css keys
 let themeWatcher = null;
-
-// A theme may start with  /* @extends other.css */  to build on another theme.
-function themeFiles(name, seen = new Set()) {
-  const file = themes().get(name);
-  if (!file || seen.has(name)) return [];
-  seen.add(name);
-  let css = '';
-  try { css = fs.readFileSync(file, 'utf8'); } catch { return []; }
-  const m = /^\s*\/\*\s*@extends\s+([\w.\- ]+?\.css)\s*\*\//.exec(css);
-  return [...(m ? themeFiles(m[1], seen) : []), { file, css }];
-}
-
-function readThemeCss() {
-  const name = settings.get('theme');
-  return name ? themeFiles(name).map((t) => t.css).join('\n') : '';
-}
+let previewAccent = null; // live preview from the Settings window (unsaved)
 
 // Only theme the app once logged in (the login page looks odd themed).
 // Meta sets the c_user cookie for a logged-in session.
@@ -116,23 +119,47 @@ async function isLoggedIn(ses) {
   }
 }
 
+function currentAccentCss() {
+  const name = settings.get('theme');
+  if (!name) return '';
+  return themeEngine.accentCss(previewAccent || settings.get('accent'), themeEngine.themeMode(name), settings.get('recolorChats'));
+}
+
+async function swap(wc, slot, css) {
+  const keys = injected.get(wc) || {};
+  injected.set(wc, keys);
+  const old = keys[slot];
+  keys[slot] = null;
+  if (css && !wc.isDestroyed()) keys[slot] = await wc.insertCSS(css, { cssOrigin: 'user' });
+  if (old && !wc.isDestroyed()) { try { await wc.removeInsertedCSS(old); } catch {} }
+}
+
 async function applyTheme(wc) {
   if (!wc || wc.isDestroyed()) return;
-  const old = cssKeys.get(wc);
-  if (old) { try { await wc.removeInsertedCSS(old); } catch {} cssKeys.delete(wc); }
-  const css = (await isLoggedIn(wc.session)) ? readThemeCss() : '';
-  if (css && !wc.isDestroyed()) cssKeys.set(wc, await wc.insertCSS(css, { cssOrigin: 'user' }));
+  const on = await isLoggedIn(wc.session) && settings.get('theme');
+  // remove the accent first so the order stays theme -> accent
+  await swap(wc, 'accent', '');
+  await swap(wc, 'theme', on ? themeEngine.themeCss(settings.get('theme')) : '');
+  await swap(wc, 'accent', on ? currentAccentCss() : '');
+}
+
+async function applyAccent(wc) {
+  if (!wc || wc.isDestroyed()) return;
+  const keys = injected.get(wc);
+  if (!keys || !keys.theme) return; // not themed (logged out / no theme)
+  await swap(wc, 'accent', currentAccentCss());
 }
 
 function applyThemeEverywhere() {
   for (const w of allWindows()) applyTheme(w.webContents);
   watchTheme();
 }
+const applyAccentEverywhere = () => allWindows().forEach((w) => applyAccent(w.webContents));
 
-// Live reload: edit the .css file, save, and the app updates instantly.
+// Live reload: edit a .css file in data\themes, save, and the app updates instantly.
 function watchTheme() {
   if (themeWatcher) { themeWatcher.close(); themeWatcher = null; }
-  const files = themeFiles(settings.get('theme')).map((t) => t.file).filter((f) => !f.includes('.asar'));
+  const files = themeEngine.chain(settings.get('theme')).map((t) => t.file).filter((f) => !f.includes('.asar'));
   if (!files.length) return;
   let t;
   const reapply = () => {
@@ -350,7 +377,8 @@ function createDesktopShortcut() {
     appUserModelId: APP_ID,
     description: 'OpenMessenger',
   });
-  dialog.showMessageBox({ message: ok ? 'Desktop shortcut created.' : 'Could not create the shortcut.' });
+  dialog.showMessageBox(settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : mainWindow,
+    { message: ok ? 'Desktop shortcut created.' : 'Could not create the shortcut.' });
 }
 
 // Stamp our app ID onto an existing desktop shortcut that points at this exe.
@@ -366,42 +394,133 @@ function repairDesktopShortcut() {
   } catch { /* no shortcut */ }
 }
 
+// ------------------------------------------------------------------ settings
+// Single place where a changed setting takes effect (menus + Settings window).
+function applySetting(key, value) {
+  settings.set(key, value);
+  switch (key) {
+    case 'theme':
+    case 'recolorChats':
+      previewAccent = null;
+      applyThemeEverywhere();
+      break;
+    case 'accent':
+      previewAccent = null;
+      applyAccentEverywhere();
+      break;
+    case 'sound':
+    case 'volume':
+      sendSoundEverywhere();
+      break;
+    default:
+      break;
+  }
+  rebuildMenus();
+  pushSettingsState();
+}
+
+function testSound() {
+  if (mainWindow) mainWindow.webContents.send('om:play');
+}
+
+function settingsState() {
+  return {
+    settings: {
+      theme: settings.get('theme'),
+      accent: settings.get('accent'),
+      recolorChats: settings.get('recolorChats'),
+      sound: settings.get('sound'),
+      volume: settings.get('volume'),
+      closeToTray: settings.get('closeToTray'),
+      startMinimized: settings.get('startMinimized'),
+    },
+    themes: themeEngine.listThemes(),
+    sounds: [...sounds().keys()].map((file) => ({ file, name: prettyName(file) })),
+    version: app.getVersion(),
+    platform: process.platform,
+  };
+}
+
+function pushSettingsState() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('settings:state', settingsState());
+}
+
+function openSettings() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+  settingsWindow = new BrowserWindow({
+    width: 760,
+    height: 720,
+    minWidth: 560,
+    minHeight: 480,
+    title: 'OpenMessenger Settings',
+    backgroundColor: '#0b0b0e',
+    autoHideMenuBar: true,
+    icon: path.join(paths.assets, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+    parent: undefined,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'settings-ui', 'preload.js'),
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+    },
+  });
+  settingsWindow.setMenu(null);
+  settingsWindow.loadURL('om://settings/index.html');
+  settingsWindow.once('ready-to-show', () => settingsWindow.show());
+  settingsWindow.webContents.setWindowOpenHandler(({ url }) => { openExternal(url); return { action: 'deny' }; });
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+    if (previewAccent) { previewAccent = null; applyAccentEverywhere(); } // drop unsaved preview
+  });
+}
+
+ipcMain.handle('settings:get', () => settingsState());
+ipcMain.handle('settings:set', (_e, key, value) => {
+  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'closeToTray', 'startMinimized'];
+  if (!allowed.includes(key)) return false;
+  if (key === 'volume') value = Math.min(1, Math.max(0, Number(value) || 0));
+  if (key === 'accent' && !/^#[0-9a-f]{6}$/i.test(value)) return false;
+  applySetting(key, value);
+  return true;
+});
+ipcMain.on('settings:preview-accent', (_e, hex) => {
+  if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return;
+  previewAccent = hex;
+  applyAccentEverywhere();
+});
+ipcMain.on('settings:test-sound', testSound);
+ipcMain.on('settings:open', (_e, what) => {
+  const target = { themes: paths.userThemes, sounds: paths.userSounds, data: paths.dataDir }[what];
+  if (target) shell.openPath(target);
+});
+ipcMain.on('settings:shortcut', createDesktopShortcut);
+
 function settingsMenu() {
   const themeItems = [{ label: 'None (Messenger default)', type: 'radio', checked: !settings.get('theme'),
-    click: () => { settings.set('theme', ''); applyThemeEverywhere(); } }];
-  for (const name of themes().keys()) {
-    themeItems.push({ label: prettyName(name), type: 'radio', checked: settings.get('theme') === name,
-      click: () => { settings.set('theme', name); applyThemeEverywhere(); rebuildMenus(); } });
+    click: () => applySetting('theme', '') }];
+  for (const t of themeEngine.listThemes()) {
+    themeItems.push({ label: t.name, type: 'radio', checked: settings.get('theme') === t.file,
+      click: () => applySetting('theme', t.file) });
   }
   themeItems.push({ type: 'separator' },
+    { label: 'Recolor chats with accent', type: 'checkbox', checked: settings.get('recolorChats'),
+      click: (i) => applySetting('recolorChats', i.checked) },
     { label: 'Open themes folder', click: () => shell.openPath(paths.userThemes) },
     { label: 'Reload theme', accelerator: 'CmdOrCtrl+Shift+R', click: applyThemeEverywhere });
 
-  const soundItems = [{ label: 'Silent', type: 'radio', checked: !settings.get('sound'),
-    click: () => { settings.set('sound', ''); sendSoundEverywhere(); } }];
-  for (const name of sounds().keys()) {
-    soundItems.push({ label: prettyName(name), type: 'radio', checked: settings.get('sound') === name,
-      click: () => {
-        settings.set('sound', name); sendSoundEverywhere();
-        setTimeout(() => mainWindow && mainWindow.webContents.send('om:play'), 200);
-      } });
-  }
-  const vol = Math.round(settings.get('volume') * 100);
-  soundItems.push({ type: 'separator' },
-    { label: 'Volume', submenu: [10, 25, 50, 75, 100].map((v) => ({ label: `${v}%`, type: 'radio', checked: vol === v,
-      click: () => { settings.set('volume', v / 100); sendSoundEverywhere(); mainWindow && mainWindow.webContents.send('om:play'); } })) },
-    { label: 'Test sound', click: () => mainWindow && mainWindow.webContents.send('om:play') },
-    { label: 'Open sounds folder', click: () => shell.openPath(paths.userSounds) },
-    { label: 'Rescan themes & sounds', click: rebuildMenus });
-
   return [
+    { label: 'Settings…', accelerator: 'CmdOrCtrl+,', click: openSettings },
+    { type: 'separator' },
     { label: 'Theme', submenu: themeItems },
-    { label: 'Notification sound', submenu: soundItems },
+    { label: 'Test notification sound', click: testSound },
     { type: 'separator' },
     { label: 'Close button hides to tray', type: 'checkbox', checked: settings.get('closeToTray'),
-      click: (i) => settings.set('closeToTray', i.checked) },
-    { label: 'Start minimized to tray', type: 'checkbox', checked: settings.get('startMinimized'),
-      click: (i) => settings.set('startMinimized', i.checked) },
+      click: (i) => applySetting('closeToTray', i.checked) },
     { label: 'Create desktop shortcut', click: createDesktopShortcut, visible: process.platform === 'win32' },
     { label: 'Open data folder', click: () => shell.openPath(paths.dataDir) },
   ];
@@ -453,7 +572,9 @@ ipcMain.on('om:notified', () => {
 });
 
 // ------------------------------------------------------------------ lifecycle
-app.on('second-instance', showMain);
+app.on('second-instance', (_e, argv) => {
+  if (argv.includes('--settings')) openSettings(); else showMain();
+});
 app.on('before-quit', () => {
   quitting = true;
   settings.flush();
@@ -463,6 +584,7 @@ app.on('activate', showMain); // macOS dock click
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
 app.whenReady().then(() => {
+  registerOmProtocol();
   repairDesktopShortcut();
   setupSession();
   createTray();
@@ -470,4 +592,17 @@ app.whenReady().then(() => {
   createMainWindow();
   watchTheme();
   mainWindow.on('focus', () => mainWindow.flashFrame(false));
+  if (process.argv.includes('--settings')) openSettings();
+
+  // Right-click the taskbar icon -> "Settings"
+  if (process.platform === 'win32' && app.isPackaged) {
+    app.setUserTasks([{
+      program: process.execPath,
+      arguments: '--settings',
+      iconPath: process.execPath,
+      iconIndex: 0,
+      title: 'Settings',
+      description: 'Open OpenMessenger settings',
+    }]);
+  }
 });

@@ -28,7 +28,10 @@ own web client. Because it *is* Messenger's client, every feature works, includi
 
 - **Everything Messenger has.** Chats, groups, reactions, voice notes, stickers, calls.
 - **Custom notification sounds.** Pick a built-in sound or drop in your own `.wav`/`.mp3`.
-- **CSS themes.** Ships with *OLED Purple*. Themes reload live as you edit them.
+- **Themes + any accent color.** OLED, Midnight, Graphite, Catppuccin Mocha, Nord and Light, each
+  combinable with any accent: presets, hex/RGB input, a color wheel, or pick from screen.
+  Optionally recolor every chat's bubbles with your accent.
+- **Custom CSS themes.** Write your own. They reload live as you edit them.
 - **Native desktop integration.** Windows toast notifications, an unread-count badge on the
   taskbar icon, a tray icon, and close-to-tray.
 - **Portable.** Everything (login, cache, settings, your themes and sounds) lives in one `data`
@@ -43,40 +46,34 @@ own web client. Because it *is* Messenger's client, every feature works, includi
 1. Download `OpenMessenger-x.y.z-win-x64-portable.zip` from [Releases](../../releases).
 2. Extract it anywhere, e.g. `D:\Apps\OpenMessenger`.
 3. Run `OpenMessenger.exe` and log in.
-4. Optional: press **Alt**, then **OpenMessenger → Create desktop shortcut**.
+4. Optional: Settings → Behavior → **Create desktop shortcut**.
 
 To update, extract the new version over the old folder. Your `data` folder is kept.
 
 ## Settings
 
-Press **Alt** to show the menu bar, or right-click the tray icon:
+Open **Settings** with `Ctrl+,`, from the tray icon menu, or by right-clicking the taskbar icon:
 
-| Menu | What it does |
-| --- | --- |
-| Theme | Switch theme, open the themes folder, reload (Ctrl+Shift+R) |
-| Notification sound | Pick a sound, set the volume, test it, open the sounds folder |
-| Close button hides to tray | Keep running in the background when you close the window |
-| Start minimized to tray | Start hidden, tray icon only |
-| Open data folder | Where everything is stored |
+- **Appearance**: pick a theme.
+- **Accent color**: color wheel, brightness, hex/RGB input, presets, pick-from-screen, and
+  "Recolor chats with the accent".
+- **Notifications**: pick a sound, set the volume, and test it.
+- **Behavior**: close-to-tray, start minimized, desktop shortcut, open the data folder.
 
 Zoom: `Ctrl +` / `Ctrl -` / `Ctrl 0`. Developer tools: `Ctrl+Shift+I`.
 
-> **Hearing two sounds?** Turn off Messenger's own sounds in Messenger:
-> **Settings → Preferences → Message sounds / Call sounds**.
+> **Hearing two sounds?** Turn off Messenger's own message sounds in Messenger's preferences.
 
 ## Custom themes
 
-1. Menu → **Theme → Open themes folder** (this is `data\themes`).
-2. Copy `oled-purple.css` from [`themes/`](themes/) there, rename it, and edit the colours at the top.
-3. Menu → **Notification sound → Rescan themes & sounds**, then pick your theme.
-
-While the theme is selected, saving the file updates the app instantly. See
-[themes/README.md](themes/README.md) for tips.
+Settings → **Open themes folder** (`data\themes`), add a `.css` file, and reopen Settings. A
+theme is a small palette on top of a shared base, so a basic one is about 10 lines. See
+[themes/README.md](themes/README.md).
 
 ## Custom sounds
 
-Put `.wav`, `.mp3`, `.ogg`, `.m4a` or `.flac` files in **Open sounds folder** (`data\sounds`),
-choose **Rescan themes & sounds**, then pick yours. Short sounds (under 1 second) work best.
+Put `.wav`, `.mp3`, `.ogg`, `.m4a` or `.flac` files in Settings → **Open sounds folder**
+(`data\sounds`), then reopen Settings and pick yours. Short sounds (under 1 second) work best.
 
 ## Development
 
@@ -94,11 +91,15 @@ npm run dist       # build a portable zip into ./dist
 Layout:
 
 ```
-src/main.js        app window, tray, menus, permissions, theme + sound wiring
+src/main.js        app window, tray, menus, permissions, settings window, sound wiring
 src/preload.js     runs in the page: silences toasts and plays the chosen sound
+src/theme.js       theme loading (@extends chains) + generated accent layer
+src/color.js       color math + CSS-filter solver (recolors icons Meta tints with filters)
+src/settings-ui/   the Settings window (served from a private om:// scheme)
 src/paths.js       portable data-folder redirection
 src/settings.js    data/settings.json
-themes/            built-in CSS themes
+themes/            built-in CSS themes (see themes/README.md)
+scripts/cdp.js     drive a running dev build over CDP (npm run dev): eval JS, screenshots
 assets/            icon, tray icon, unread badges, built-in sounds
 scripts/make-assets.py   regenerates assets (uv run --with pillow python scripts/make-assets.py)
 ```
