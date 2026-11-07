@@ -1,0 +1,56 @@
+{
+  "name": "openmessenger",
+  "productName": "OpenMessenger",
+  "version": "0.1.0",
+  "description": "A portable desktop app for Facebook Messenger with custom themes and notification sounds.",
+  "main": "src/main.js",
+  "private": true,
+  "license": "MIT",
+  "author": "CinnamonShaey",
+  "repository": "github:CinnamonShaey/OpenMessenger",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --remote-debugging-port=9333",
+    "dist": "electron-builder --publish never",
+    "assets": "uv run --with pillow python scripts/make-assets.py"
+  },
+  "build": {
+    "appId": "io.github.openmessenger",
+    "productName": "OpenMessenger",
+    "files": [
+      "src/**",
+      "themes/**",
+      "assets/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "zip"
+      ],
+      "artifactName": "OpenMessenger-${version}-win-${arch}-portable.${ext}"
+    },
+    "mac": {
+      "icon": "assets/icon.png",
+      "category": "public.app-category.social-networking",
+      "target": [
+        "zip"
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Network;InstantMessaging",
+      "target": [
+        "AppImage",
+        "tar.gz"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  }
+}

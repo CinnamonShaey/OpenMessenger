@@ -1,0 +1,76 @@
+/*
+ * OLED Purple — OpenMessenger theme
+ * Pure-black surfaces (pixels off on OLED panels) with violet accents.
+ *
+ * Messenger/Facebook colour everything through CSS variables, so a theme
+ * mostly just overrides those. Tip: press Ctrl+Shift+I in the app to
+ * inspect elements and find more variables. Save this file and the app
+ * reloads it instantly (when it lives in data\themes\).
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+.__fb-light-mode:root,
+.__fb-dark-mode:root {
+  /* --- palette (edit these first) --- */
+  --om-bg: #000000;
+  --om-surface: #0a0a0c;
+  --om-raised: #141418;
+  --om-hover: rgba(168, 85, 247, 0.10);
+  --om-press: rgba(168, 85, 247, 0.18);
+  --om-border: #1f1f26;
+  --om-text: #ececf1;
+  --om-text-dim: #9d9daa;
+  --om-accent: #a855f7;
+  --om-accent-strong: #9333ea;
+  --om-accent-soft: rgba(168, 85, 247, 0.16);
+
+  /* --- Meta design tokens --- */
+  --web-wash: var(--om-bg) !important;
+  --wash: var(--om-bg) !important;
+  --surface-background: var(--om-bg) !important;
+  --card-background: var(--om-surface) !important;
+  --card-background-flat: var(--om-surface) !important;
+  --messenger-card-background: var(--om-bg) !important;
+  --nav-bar-background: var(--om-bg) !important;
+  --popover-background: var(--om-raised) !important;
+  --comment-background: var(--om-raised) !important;
+  --secondary-button-background: var(--om-raised) !important;
+  --secondary-button-background-floating: var(--om-raised) !important;
+  --input-background: var(--om-raised) !important;
+  --chat-composer-input-background-color: var(--om-raised) !important;
+  --hover-overlay: var(--om-hover) !important;
+  --press-overlay: var(--om-press) !important;
+  --divider: var(--om-border) !important;
+  --media-inner-border: var(--om-border) !important;
+
+  --primary-text: var(--om-text) !important;
+  --secondary-text: var(--om-text-dim) !important;
+  --placeholder-text: #6b6b78 !important;
+  --primary-icon: var(--om-text) !important;
+  --secondary-icon: var(--om-text-dim) !important;
+
+  --accent: var(--om-accent) !important;
+  --blue-link: var(--om-accent) !important;
+  --primary-button-background: var(--om-accent-strong) !important;
+  --primary-deemphasized-button-background: var(--om-accent-soft) !important;
+  --primary-deemphasized-button-text: var(--om-accent) !important;
+  --primary-web-focus-indicator: var(--om-accent) !important;
+  --notification-badge: var(--om-accent) !important;
+  --text-highlight: var(--om-accent-soft) !important;
+}
+
+html, body {
+  background: var(--om-bg) !important;
+}
+
+::selection {
+  background: rgba(168, 85, 247, 0.45);
+}
+
+/* Slim purple scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2235; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--om-accent); }
