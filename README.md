@@ -2,14 +2,14 @@
 
 <h1 align="center">OpenMessenger</h1>
 
-<p align="center">A portable desktop app for Facebook Messenger, with custom CSS themes and your own notification sounds.</p>
+<p align="center">A portable desktop app for Facebook Messenger, with themes, any accent color and your own notification sounds.</p>
 
 ---
 
-Meta discontinued the official Messenger desktop app. OpenMessenger gives it back: a real
-window with a taskbar badge, tray icon and native notifications, wrapped around Messenger's
-own web client. Because it *is* Messenger's client, every feature works, including
-**voice and video calls** and screen sharing.
+Meta discontinued the official Messenger desktop app. OpenMessenger gives you a real desktop
+app again: its own window, taskbar badge, tray icon and native notifications, wrapped around
+Messenger's own web client (messenger.com). Because it runs Messenger's own client, you get
+Messenger's features, calls included, the same as in a browser.
 
 > [!IMPORTANT]
 > **Not affiliated with Meta.** OpenMessenger is an independent, unofficial project. It is not
@@ -26,59 +26,97 @@ own web client. Because it *is* Messenger's client, every feature works, includi
 
 ## Features
 
-- **Everything Messenger has.** Chats, groups, reactions, voice notes, stickers, calls.
-- **Custom notification sounds.** Pick a built-in sound or drop in your own `.wav`/`.mp3`.
-- **Themes + any accent color.** OLED, Midnight, Graphite, Catppuccin Mocha, Nord and Light, each
-  combinable with any accent: presets, hex/RGB input, a color wheel, or pick from screen.
-  Optionally recolor every chat's bubbles with your accent.
-- **Custom CSS themes.** Write your own. They reload live as you edit them.
-- **Native desktop integration.** Windows toast notifications, an unread-count badge on the
-  taskbar icon, a tray icon, and close-to-tray.
-- **Portable.** Everything (login, cache, settings, your themes and sounds) lives in one `data`
-  folder next to the `.exe`. Nothing goes into `AppData`, and the only registry entry is the
-  startup entry if you turn on *Start with Windows*. Delete the folder and it's gone.
-- **Optional start with Windows.** Off by default. Turn it on in Settings, optionally starting
-  minimized to the tray.
+- **Messenger's own client.** Chats, groups, reactions, voice notes, stickers and calls all come
+  from messenger.com itself.
+- **Themes.** OLED, Midnight, Graphite, Catppuccin Mocha, Nord and Light, or Messenger's own look.
+- **Any accent color.** Color wheel, brightness slider, hex/RGB input, 18 presets, or pick a color
+  from anywhere on screen. It works with every theme, and you can optionally recolor every chat's
+  message bubbles with it.
+- **Notification sounds.** Four gentle built-in sounds, or add your own. Adjustable volume.
+- **Desktop integration.** Native notifications (click to jump to the app), an unread count on
+  the taskbar icon, a tray icon, close-to-tray, and a **Settings** entry when you right-click the
+  taskbar icon.
+- **Portable on Windows.** Everything lives in a `data` folder next to `OpenMessenger.exe`.
+- **Optional start with Windows.** Off by default, with an option to start minimized to the tray.
+- **Your own CSS themes.** They reload live while you edit them.
 - Right-click menu with spell-check suggestions, copy/save image, and open-link-in-browser.
-- External links open in your normal browser.
+  External links open in your normal browser.
 
 ## Install (Windows)
 
 1. Download `OpenMessenger-x.y.z-win-x64-portable.zip` from [Releases](../../releases).
-2. Extract it anywhere, e.g. `D:\Apps\OpenMessenger`.
-3. Run `OpenMessenger.exe` and log in.
-4. Optional: Settings → Behavior → **Create desktop shortcut**.
+2. Extract it anywhere you like, e.g. `D:\Apps\OpenMessenger`. Pick a folder you can write to.
+3. Run `OpenMessenger.exe` and log in to Messenger.
+4. Optional: **Settings → Behavior → Create desktop shortcut**.
 
-To update, extract the new version over the old folder. Your `data` folder is kept.
+> [!NOTE]
+> The app isn't code-signed (that costs money every year), so Windows SmartScreen may say
+> *"Windows protected your PC"* the first time. Click **More info → Run anyway**.
+
+**Updating:** close OpenMessenger (tray icon → Quit), then extract the new version over the old
+folder. Your `data` folder, including your login, is kept.
+
+**Uninstalling:** turn off *Start with Windows* if you enabled it, quit the app, then delete the
+folder (and the desktop shortcut, if you made one). The app itself writes nothing else to your
+system. Windows keeps its own small records, like your notification preferences for the app.
+
+### macOS and Linux (experimental)
+
+The release workflow also builds a macOS `.zip` and Linux `AppImage`/`tar.gz`, but **these have
+never been tested**. On those systems the app stores its data in the normal per-user folder
+(`~/Library/Application Support/OpenMessenger` or `~/.config/OpenMessenger`) instead of next to
+the app. Feedback and fixes are welcome.
 
 ## Settings
 
-Open **Settings** with `Ctrl+,`, from the tray icon menu, or by right-clicking the taskbar icon:
+Open **Settings** with `Ctrl+,`, from the tray icon menu, by right-clicking the taskbar icon, or
+from the menu bar (press `Alt`):
 
-- **Appearance**: pick a theme.
-- **Accent color**: color wheel, brightness, hex/RGB input, presets, pick-from-screen, and
-  "Recolor chats with the accent".
-- **Notifications**: pick a sound, set the volume, and test it.
-- **Behavior**: close-to-tray, start with Windows, start minimized, desktop shortcut, open the
-  data folder.
+| Section | What's there |
+| --- | --- |
+| Appearance | Theme cards with a preview, plus a button to open the themes folder |
+| Accent color | Color wheel, brightness, hex/RGB, presets, pick-from-screen, "use theme's suggestion", recolor chats |
+| Notifications | Pick a sound (click to hear it), volume, play button, open the sounds folder |
+| Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
 
-> **Moved the app folder?** Turn *Start with Windows* off and on again so it points at the new
+Other shortcuts: zoom with `Ctrl +` / `Ctrl -` / `Ctrl 0`, reload the theme with `Ctrl+Shift+R`,
+developer tools with `Ctrl+Shift+I`.
+
+> **Moved the app folder?** Turn *Start with Windows* off and on again so it points to the new
 > location.
 
-Zoom: `Ctrl +` / `Ctrl -` / `Ctrl 0`. Developer tools: `Ctrl+Shift+I`.
+> **Hearing Messenger's own sound too?** Turn it off in Messenger's own settings if it offers that,
+> or set OpenMessenger's sound to *Silent*.
 
-> **Hearing two sounds?** Turn off Messenger's own message sounds in Messenger's preferences.
+## Custom themes and sounds
 
-## Custom themes
+- **Themes:** Settings → **Open themes folder** (`data\themes`), add a `.css` file, and reopen
+  Settings. A theme is a small color palette on top of a shared base, so a basic one is about 10
+  lines. See [themes/README.md](themes/README.md).
+- **Sounds:** Settings → **Open sounds folder** (`data\sounds`), add `.wav`, `.mp3`, `.ogg`, `.m4a`
+  or `.flac` files, and reopen Settings. Short sounds (under 1 second) work best.
 
-Settings → **Open themes folder** (`data\themes`), add a `.css` file, and reopen Settings. A
-theme is a small palette on top of a shared base, so a basic one is about 10 lines. See
-[themes/README.md](themes/README.md).
+## Privacy and security
 
-## Custom sounds
+- **Your password is never stored.** Like a browser, the app keeps Messenger's login session
+  cookie. In release builds that cookie is **encrypted** with your Windows account (DPAPI), so a
+  copied `data` folder can't be used to log in on another PC or user account.
+- **No telemetry.** OpenMessenger only talks to Meta's own Messenger/Facebook servers, the same as
+  messenger.com in a browser. Links to other sites open in your normal browser.
+- **Locked-down window.** Messenger runs sandboxed and context-isolated, with no access to Node.js
+  or your files. Camera, microphone, notification and screen-share permissions are granted only to
+  Messenger/Facebook pages.
+- **Hardened executable.** Electron's Node.js inspector and run-as-Node switches are disabled, and
+  the app's code is integrity-checked at startup.
 
-Put `.wav`, `.mp3`, `.ogg`, `.m4a` or `.flac` files in Settings → **Open sounds folder**
-(`data\sounds`), then reopen Settings and pick yours. Short sounds (under 1 second) work best.
+## How it works
+
+OpenMessenger loads `messenger.com` in a Chromium window and reports a standard Chrome user agent,
+so Meta serves its normal web client. A small preload script wraps the page's `Notification` API.
+The Windows notification stays silent and your chosen sound plays instead. Themes are injected as
+stylesheets that override Messenger's own CSS variables. The accent color is generated as a
+separate layer on top, including CSS-filter values for the icons Meta tints with filters rather
+than colors.
 
 ## Development
 
@@ -88,45 +126,46 @@ Requirements: [Node.js](https://nodejs.org) 20+ and Git.
 git clone https://github.com/CinnamonShaey/OpenMessenger.git
 cd OpenMessenger
 npm install
-npm start          # run the app (data goes to ./data, git-ignored)
-npm run dev        # same, with Chrome DevTools Protocol on port 9333
-npm run dist       # build a portable zip into ./dist
+npm start          # run from source (data goes to ./data, git-ignored)
+npm run dev        # same, with Chrome DevTools Protocol on port 9333 (see scripts/cdp.js)
+npm run dist       # build into ./dist (Windows: portable zip + dist/win-unpacked)
+npm run assets     # regenerate icon, badges and sounds (needs uv)
 ```
+
+> [!WARNING]
+> Running from source uses plain Electron, which **doesn't encrypt cookies**. Your login in
+> `./data` is stored unencrypted. Use `npm run dist` builds for everyday use, and delete `./data`
+> when you're done developing.
 
 Layout:
 
 ```
-src/main.js        app window, tray, menus, permissions, settings window, sound wiring
-src/preload.js     runs in the page: silences toasts and plays the chosen sound
-src/theme.js       theme loading (@extends chains) + generated accent layer
-src/color.js       color math + CSS-filter solver (recolors icons Meta tints with filters)
-src/settings-ui/   the Settings window (served from a private om:// scheme)
-src/paths.js       portable data-folder redirection
-src/settings.js    data/settings.json
-themes/            built-in CSS themes (see themes/README.md)
-scripts/cdp.js     drive a running dev build over CDP (npm run dev): eval JS, screenshots
-assets/            icon, tray icon, unread badges, built-in sounds
-scripts/make-assets.py   regenerates assets (uv run --with pillow python scripts/make-assets.py)
+src/main.js             app window, tray, menus, permissions, settings window, start-with-Windows
+src/preload.js          runs in the Messenger page: silences toasts and plays the chosen sound
+src/theme.js            theme loading (@extends chains) + generated accent layer
+src/color.js            color math + CSS-filter solver
+src/settings-ui/        the Settings window (served from a private om:// scheme)
+src/paths.js            where data is stored (portable on Windows)
+src/settings.js         data/settings.json
+themes/                 built-in themes (see themes/README.md)
+assets/                 icon, tray icon, unread badges, built-in sounds
+scripts/make-assets.py  generates everything in assets/ (no third-party artwork or audio)
+scripts/cdp.js          poke at a running `npm run dev` build: evaluate JS, take screenshots
 ```
 
 ### Releasing
 
-Bump `version` in `package.json`, commit, then:
+Bump `version` in `package.json`, commit, then tag and push:
 
 ```bash
-git tag v0.2.0 && git push --tags
+git tag v0.2.0
+git push --tags
 ```
 
-GitHub Actions builds Windows, macOS and Linux packages and attaches them to a draft release.
-
-## How it works
-
-OpenMessenger loads `messenger.com` in a locked-down Chromium window (sandboxed, context-isolated,
-no Node access for the page). It reports a standard Chrome user agent so Meta serves the full web
-client. A small preload script wraps the page's `Notification` API, which makes the Windows toast
-silent and plays your chosen sound with WebAudio instead. Themes are injected as user stylesheets
-that override Meta's CSS variables.
+GitHub Actions builds Windows, macOS and Linux packages and attaches them to a **draft**
+release. Check it, then publish it on GitHub.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The bundled icon and sounds are generated by `scripts/make-assets.py` and fall under
+the same license.

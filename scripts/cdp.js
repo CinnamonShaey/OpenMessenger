@@ -1,5 +1,8 @@
-// Tiny CDP helper for debugging OpenMessenger in dev mode.
-// usage: node cdp.js "<js expression>" [urlSubstring]   |   node cdp.js --shot out.png
+// Tiny CDP client for poking at a running build started with --remote-debugging-port=9333
+// (e.g. `npm run dev`). Picks the first page whose URL/title contains <target>.
+//   node scripts/cdp.js "<js expression>" [ignored] [target]   evaluate JS, print result
+//   node scripts/cdp.js --shot out.png [target]                screenshot
+//   node scripts/cdp.js --list                                 list pages
 const [, , arg, arg2, arg3] = process.argv;
 (async () => {
   const targets = await (await fetch('http://127.0.0.1:9333/json')).json();

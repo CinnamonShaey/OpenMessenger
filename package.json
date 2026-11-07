@@ -36,7 +36,8 @@
       "enableNodeCliInspectArguments": false,
       "enableEmbeddedAsarIntegrityValidation": true,
       "onlyLoadAppFromAsar": true,
-      "grantFileProtocolExtraPrivileges": false
+      "grantFileProtocolExtraPrivileges": false,
+      "resetAdHocDarwinSignature": true
     },
     "win": {
       "icon": "assets/icon.ico",
