@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Runs inside every Messenger window (sandboxed, isolated from the page).
 // Jobs:
 //   1. Wrap the page's Notification API so Windows toasts are silent and

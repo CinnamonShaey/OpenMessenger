@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Settings window logic. Talks to the main process through window.om (preload).
 const $ = (id) => document.getElementById(id);
 

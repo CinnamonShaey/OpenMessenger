@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Where OpenMessenger keeps its data (login, cache, settings, your themes/sounds).
 //
 //   Windows (packaged): <folder containing OpenMessenger.exe>\data\   (portable)

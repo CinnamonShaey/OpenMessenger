@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 CinnamonShaey
 """Generate OpenMessenger's icon, unread badges and notification sounds.
 
 Everything is synthesized here so the repo contains no third-party artwork

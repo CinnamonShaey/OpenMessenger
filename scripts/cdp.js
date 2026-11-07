@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Tiny CDP client for poking at a running build started with --remote-debugging-port=9333
 // (e.g. `npm run dev`). Picks the first page whose URL/title contains <target>.
 //   node scripts/cdp.js "<js expression>" [ignored] [target]   evaluate JS, print result

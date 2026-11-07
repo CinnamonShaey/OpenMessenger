@@ -5,7 +5,7 @@
   "description": "A portable desktop app for Facebook Messenger with custom themes and notification sounds.",
   "main": "src/main.js",
   "private": true,
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "author": "CinnamonShaey",
   "repository": "github:CinnamonShaey/OpenMessenger",
   "scripts": {

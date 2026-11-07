@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Bridge for the Settings window (sandboxed; no Node access for the page).
 const { contextBridge, ipcRenderer } = require('electron');
 

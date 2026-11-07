@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 // Theme engine: theme files + generated accent layer, injected as user CSS.
 const fs = require('fs');
 const path = require('path');

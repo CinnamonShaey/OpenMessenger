@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 CinnamonShaey
 const paths = require('./paths'); // must be first: redirects all app data into data\
 const settings = require('./settings');
 const themeEngine = require('./theme');
