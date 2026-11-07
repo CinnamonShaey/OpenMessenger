@@ -38,33 +38,25 @@ def make_icon(size: int) -> Image.Image:
             t = (x + y) / (2 * s)
             gp[x, y] = tuple(int(PURPLE_A[i] * (1 - t) + PURPLE_B[i] * t) for i in range(3)) + (255,)
 
-    # speech-bubble mask: circle + tail bottom-left
+    # speech-bubble mask: a circle filling the whole canvas (same size as other
+    # round app icons like Spotify/Discord) with the tail tucked into the empty
+    # bottom-left corner of the square.
     mask = Image.new("L", (s, s), 0)
     m = ImageDraw.Draw(mask)
-    pad = s * 0.06
-    m.ellipse([pad, pad, s - pad, s - pad * 1.6], fill=255)
-    m.polygon([(s * 0.16, s * 0.70), (s * 0.10, s * 0.96), (s * 0.40, s * 0.82)], fill=255)
+    m.ellipse([0, 0, s - 1, s - 1], fill=255)
+    m.polygon([(s * 0.10, s * 0.70), (s * 0.02, s * 0.98), (s * 0.36, s * 0.88)], fill=255)
     img.paste(grad, (0, 0), mask)
 
-    # black "O" ring in the middle (Open)
+    # black "O" ring in the middle (Open), sized relative to the circle
     d = ImageDraw.Draw(img)
-    cx, cy = s / 2, s * 0.46
-    r_out, r_in = s * 0.24, s * 0.13
+    cx, cy = s / 2, s / 2
+    r_out, r_in = s * 0.24 / 0.88, s * 0.13 / 0.88
     d.ellipse([cx - r_out, cy - r_out, cx + r_out, cy + r_out], fill=(0, 0, 0, 255))
-    d.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], fill=(0, 0, 0, 0))
     # re-fill the hole with the gradient so it reads as a ring
     hole = Image.new("L", (s, s), 0)
     ImageDraw.Draw(hole).ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], fill=255)
     img.paste(grad, (0, 0), hole)
-
-    # Trim the transparent margin so the bubble fills the canvas edge to edge,
-    # like other round app icons (Spotify, Discord). Design is unchanged.
-    bbox = img.getbbox()
-    img = img.crop(bbox)
-    side = max(img.size)
-    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
-    square.paste(img, ((side - img.width) // 2, (side - img.height) // 2))
-    return square.resize((size, size), Image.LANCZOS)
+    return img.resize((size, size), Image.LANCZOS)
 
 
 icon = make_icon(512)
