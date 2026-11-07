@@ -35,9 +35,10 @@ own web client. Because it *is* Messenger's client, every feature works, includi
 - **Native desktop integration.** Windows toast notifications, an unread-count badge on the
   taskbar icon, a tray icon, and close-to-tray.
 - **Portable.** Everything (login, cache, settings, your themes and sounds) lives in one `data`
-  folder next to the `.exe`. Nothing goes into the registry or `AppData`. Delete the folder and
-  it's gone.
-- **No autostart.** It only runs when you open it.
+  folder next to the `.exe`. Nothing goes into `AppData`, and the only registry entry is the
+  startup entry if you turn on *Start with Windows*. Delete the folder and it's gone.
+- **Optional start with Windows.** Off by default. Turn it on in Settings, optionally starting
+  minimized to the tray.
 - Right-click menu with spell-check suggestions, copy/save image, and open-link-in-browser.
 - External links open in your normal browser.
 
@@ -58,7 +59,11 @@ Open **Settings** with `Ctrl+,`, from the tray icon menu, or by right-clicking t
 - **Accent color**: color wheel, brightness, hex/RGB input, presets, pick-from-screen, and
   "Recolor chats with the accent".
 - **Notifications**: pick a sound, set the volume, and test it.
-- **Behavior**: close-to-tray, start minimized, desktop shortcut, open the data folder.
+- **Behavior**: close-to-tray, start with Windows, start minimized, desktop shortcut, open the
+  data folder.
+
+> **Moved the app folder?** Turn *Start with Windows* off and on again so it points at the new
+> location.
 
 Zoom: `Ctrl +` / `Ctrl -` / `Ctrl 0`. Developer tools: `Ctrl+Shift+I`.
 

@@ -394,9 +394,31 @@ function repairDesktopShortcut() {
   } catch { /* no shortcut */ }
 }
 
+// ------------------------------------------------------------------ start with Windows
+// Uses the normal per-user startup entry, so it also shows up (and can be
+// disabled) in Task Manager → Startup apps. Packaged builds only.
+const AUTOSTART_ARGS = ['--autostart'];
+function autostartSupported() {
+  return app.isPackaged && (process.platform === 'win32' || process.platform === 'darwin');
+}
+function getAutostart() {
+  if (!autostartSupported()) return false;
+  return app.getLoginItemSettings({ path: process.execPath, args: AUTOSTART_ARGS }).openAtLogin;
+}
+function setAutostart(on) {
+  if (!autostartSupported()) return;
+  app.setLoginItemSettings({ openAtLogin: on, path: process.execPath, args: AUTOSTART_ARGS });
+}
+
 // ------------------------------------------------------------------ settings
 // Single place where a changed setting takes effect (menus + Settings window).
 function applySetting(key, value) {
+  if (key === 'startWithWindows') {
+    setAutostart(!!value);
+    rebuildMenus();
+    pushSettingsState();
+    return;
+  }
   settings.set(key, value);
   switch (key) {
     case 'theme':
@@ -433,7 +455,9 @@ function settingsState() {
       volume: settings.get('volume'),
       closeToTray: settings.get('closeToTray'),
       startMinimized: settings.get('startMinimized'),
+      startWithWindows: getAutostart(),
     },
+    autostartSupported: autostartSupported(),
     themes: themeEngine.listThemes(),
     sounds: [...sounds().keys()].map((file) => ({ file, name: prettyName(file) })),
     version: app.getVersion(),
@@ -481,7 +505,7 @@ function openSettings() {
 
 ipcMain.handle('settings:get', () => settingsState());
 ipcMain.handle('settings:set', (_e, key, value) => {
-  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'closeToTray', 'startMinimized'];
+  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'closeToTray', 'startMinimized', 'startWithWindows'];
   if (!allowed.includes(key)) return false;
   if (key === 'volume') value = Math.min(1, Math.max(0, Number(value) || 0));
   if (key === 'accent' && !/^#[0-9a-f]{6}$/i.test(value)) return false;
@@ -521,6 +545,8 @@ function settingsMenu() {
     { type: 'separator' },
     { label: 'Close button hides to tray', type: 'checkbox', checked: settings.get('closeToTray'),
       click: (i) => applySetting('closeToTray', i.checked) },
+    { label: 'Start with Windows', type: 'checkbox', checked: getAutostart(), visible: autostartSupported(),
+      click: (i) => applySetting('startWithWindows', i.checked) },
     { label: 'Create desktop shortcut', click: createDesktopShortcut, visible: process.platform === 'win32' },
     { label: 'Open data folder', click: () => shell.openPath(paths.dataDir) },
   ];
