@@ -59,6 +59,36 @@
   --primary-web-focus-indicator: var(--om-accent) !important;
   --notification-badge: var(--om-accent) !important;
   --text-highlight: var(--om-accent-soft) !important;
+  --highlight-bg: var(--om-accent-soft) !important;
+
+  /* selected chat row, pressed states */
+  --hosted-view-selected-state: rgba(168, 85, 247, 0.14) !important;
+  --pressable-background-color-selected: rgba(168, 85, 247, 0.18) !important;
+
+  /* links, focus rings, toggles, progress */
+  --text-blue-link: #c084fc !important;
+  --toast-text-link: #c084fc !important;
+  --badge-accent: var(--om-accent) !important;
+  --badge-background-color-blue: var(--om-accent) !important;
+  --badge-background-color-light-blue: var(--om-accent-soft) !important;
+  --focus-ring-blue: var(--om-accent) !important;
+  --focus-ring-outline-link: 2px auto var(--om-accent) !important;
+  --focus-ring-shadow-default: 0 0 0 2px #000, 0 0 0 4px var(--om-accent) !important;
+  --focus-ring-shadow-inset: 0 0 0 2px var(--om-accent) inset, 0 0 0 4px #000 inset !important;
+  --input-label-color-highlighted: var(--om-accent) !important;
+  --radio-border-color-selected: var(--om-accent) !important;
+  --switch-active: var(--om-accent) !important;
+  --toggle-active-background: var(--om-accent-strong) !important;
+  --toggle-track-on: var(--om-accent-strong) !important;
+  --toggle-button-active-background: var(--om-accent-soft) !important;
+  --progress-ring-blue-foreground: var(--om-accent) !important;
+  --progress-ring-blue-background: var(--om-accent-soft) !important;
+  --text-badge-info-background: var(--om-accent) !important;
+  --story-unseen: var(--om-accent) !important;
+
+  /* chat bubbles from other people */
+  --chat-incoming-message-bubble-background-color: #1e1a26 !important;
+  --comment-footer-background: #1e1a26 !important;
 }
 
 html, body {

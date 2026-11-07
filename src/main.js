@@ -87,20 +87,39 @@ function showMain() {
 const cssKeys = new WeakMap(); // webContents -> inserted css key
 let themeWatcher = null;
 
+// A theme may start with  /* @extends other.css */  to build on another theme.
+function themeFiles(name, seen = new Set()) {
+  const file = themes().get(name);
+  if (!file || seen.has(name)) return [];
+  seen.add(name);
+  let css = '';
+  try { css = fs.readFileSync(file, 'utf8'); } catch { return []; }
+  const m = /^\s*\/\*\s*@extends\s+([\w.\- ]+?\.css)\s*\*\//.exec(css);
+  return [...(m ? themeFiles(m[1], seen) : []), { file, css }];
+}
+
 function readThemeCss() {
   const name = settings.get('theme');
-  if (!name) return '';
-  const file = themes().get(name);
-  if (!file) return '';
-  try { return fs.readFileSync(file, 'utf8'); } catch { return ''; }
+  return name ? themeFiles(name).map((t) => t.css).join('\n') : '';
+}
+
+// Only theme the app once logged in (the login page looks odd themed).
+// Meta sets the c_user cookie for a logged-in session.
+async function isLoggedIn(ses) {
+  try {
+    const cookies = await ses.cookies.get({ name: 'c_user' });
+    return cookies.some((c) => /(^|\.)(messenger|facebook)\.com$/.test(c.domain.replace(/^\./, '')));
+  } catch {
+    return false;
+  }
 }
 
 async function applyTheme(wc) {
   if (!wc || wc.isDestroyed()) return;
   const old = cssKeys.get(wc);
   if (old) { try { await wc.removeInsertedCSS(old); } catch {} cssKeys.delete(wc); }
-  const css = readThemeCss();
-  if (css) cssKeys.set(wc, await wc.insertCSS(css, { cssOrigin: 'user' }));
+  const css = (await isLoggedIn(wc.session)) ? readThemeCss() : '';
+  if (css && !wc.isDestroyed()) cssKeys.set(wc, await wc.insertCSS(css, { cssOrigin: 'user' }));
 }
 
 function applyThemeEverywhere() {
@@ -111,15 +130,16 @@ function applyThemeEverywhere() {
 // Live reload: edit the .css file, save, and the app updates instantly.
 function watchTheme() {
   if (themeWatcher) { themeWatcher.close(); themeWatcher = null; }
-  const file = themes().get(settings.get('theme'));
-  if (!file || file.includes('.asar')) return;
+  const files = themeFiles(settings.get('theme')).map((t) => t.file).filter((f) => !f.includes('.asar'));
+  if (!files.length) return;
   let t;
-  try {
-    themeWatcher = fs.watch(file, () => {
-      clearTimeout(t);
-      t = setTimeout(() => { for (const w of allWindows()) applyTheme(w.webContents); }, 150);
-    });
-  } catch { /* ignore */ }
+  const reapply = () => {
+    clearTimeout(t);
+    t = setTimeout(() => { for (const w of allWindows()) applyTheme(w.webContents); }, 150);
+  };
+  const watchers = [];
+  for (const f of files) { try { watchers.push(fs.watch(f, reapply)); } catch { /* ignore */ } }
+  themeWatcher = { close: () => watchers.forEach((w) => w.close()) };
 }
 
 // ------------------------------------------------------------------ sound
@@ -275,6 +295,14 @@ function createMainWindow() {
 function setupSession() {
   const ses = session.defaultSession;
   ses.setUserAgent(USER_AGENT);
+
+  // Log in -> theme turns on; log out -> theme turns off.
+  ses.cookies.on('changed', (_e, cookie) => {
+    if (cookie.name === 'c_user') {
+      ses.cookies.flushStore().catch(() => {});
+      setTimeout(() => allWindows().forEach((w) => applyTheme(w.webContents)), 300);
+    }
+  });
   ses.setSpellCheckerLanguages(
     settings.get('spellcheckLanguages').filter((l) => ses.availableSpellCheckerLanguages.includes(l)),
   );
@@ -411,7 +439,11 @@ ipcMain.on('om:notified', () => {
 
 // ------------------------------------------------------------------ lifecycle
 app.on('second-instance', showMain);
-app.on('before-quit', () => { quitting = true; settings.flush(); });
+app.on('before-quit', () => {
+  quitting = true;
+  settings.flush();
+  session.defaultSession.cookies.flushStore().catch(() => {}); // keep the login on disk
+});
 app.on('activate', showMain); // macOS dock click
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 

@@ -1,0 +1,21 @@
+/* @extends oled-purple.css */
+/*
+ * OLED Purple (all chats purple)
+ * Same as OLED Purple, but ignores each conversation's own chat theme
+ * (the colours you or your friends picked in "Change theme") and makes every
+ * chat purple. The "@extends" line above pulls in the base theme first.
+ */
+
+:root,
+.__fb-light-mode,
+.__fb-dark-mode,
+[style*="--chat-outgoing-message-background-gradient"],
+[style*="--mwp-primary-theme-color"] {
+  --chat-outgoing-message-background-gradient: linear-gradient(#a855f7, #7c3aed) !important;
+  --chat-outgoing-message-bubble-background-color: #9333ea !important;
+  --mwp-primary-theme-color: #a855f7 !important;
+  --mwp-header-button-color: #a855f7 !important;
+  --chat-composer-button-color: #a855f7 !important;
+  --chat-composer-caret-color: #a855f7 !important;
+  --reaction-pill-multireact-selected-color: rgba(168, 85, 247, 0.35) !important;
+}
