@@ -5,7 +5,7 @@ const settings = require('./settings');
 const themeEngine = require('./theme');
 const {
   app, BrowserWindow, Tray, Menu, shell, ipcMain, nativeImage, session,
-  desktopCapturer, dialog, clipboard, protocol,
+  desktopCapturer, dialog, clipboard, protocol, screen,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -306,8 +306,6 @@ function createMainWindow() {
     show: false,
     webPreferences: webPreferences(),
   });
-  if (settings.get('windowMaximized')) mainWindow.maximize();
-
   wireContents(mainWindow.webContents);
   mainWindow.webContents.on('page-title-updated', (e, title) => {
     e.preventDefault();
@@ -316,12 +314,24 @@ function createMainWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
-    if (!settings.get('startMinimized')) mainWindow.show();
+    if (settings.get('startMinimized')) return;
+    if (LAUNCHED_AT_LOGIN) {
+      // Opened by Windows at sign-in: appear without grabbing focus. Asking for
+      // focus here makes Windows highlight the taskbar button orange instead.
+      if (settings.get('windowMaximized')) {
+        const { workArea } = screen.getDisplayMatching(mainWindow.getBounds());
+        mainWindow.setBounds(workArea); // looks maximized; maximize() would steal focus
+      }
+      mainWindow.showInactive();
+    } else {
+      if (settings.get('windowMaximized')) mainWindow.maximize();
+      mainWindow.show();
+    }
   });
 
   const saveBounds = () => {
     if (!mainWindow.isMaximized() && !mainWindow.isMinimized()) settings.set('windowBounds', mainWindow.getBounds());
-    settings.set('windowMaximized', mainWindow.isMaximized());
+    if (mainWindow.isVisible()) settings.set('windowMaximized', mainWindow.isMaximized());
   };
   mainWindow.on('resize', saveBounds);
   mainWindow.on('move', saveBounds);
@@ -431,6 +441,7 @@ function registerNotificationIdentity() {
 // Uses the normal per-user startup entry, so it also shows up (and can be
 // disabled) in Task Manager → Startup apps. Packaged builds only.
 const AUTOSTART_ARGS = ['--autostart'];
+const LAUNCHED_AT_LOGIN = process.argv.includes('--autostart');
 const AUTOSTART_NAME = 'OpenMessenger'; // registry value name = what startup-app lists show
 function autostartSupported() {
   return app.isPackaged && (process.platform === 'win32' || process.platform === 'darwin');
