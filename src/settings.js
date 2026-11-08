@@ -15,6 +15,7 @@ const defaults = {
   volume: 0.5,
   popups: true,             // show desktop notification pop-ups
   soundWhenActive: false,   // also play the sound while OpenMessenger is the active window
+  reactions: true,          // notify when someone reacts to your message
   closeToTray: true,
   startMinimized: false,
   spellcheckLanguages: ['en-US', 'da'],

@@ -22,6 +22,7 @@ let mode = 'custom';   // 'custom' | 'silent' | 'messenger'
 let isMain = false;    // only the main window replaces Messenger's sounds
 let popups = true;     // show desktop notification pop-ups
 let soundWhenActive = false; // also ping while the app is the active window
+let reactions = true;  // notify when someone reacts to your message
 let lastPlay = 0;
 
 ipcRenderer.on('om:sound', (_e, p) => {
@@ -32,6 +33,7 @@ ipcRenderer.on('om:sound', (_e, p) => {
   isMain = !!p.isMain;
   popups = p.popups !== false;
   soundWhenActive = !!p.soundWhenActive;
+  reactions = p.reactions !== false;
   decoded = null;
 });
 ipcRenderer.on('om:play', () => {
@@ -75,6 +77,7 @@ contextBridge.exposeInMainWorld('__openMessenger', {
   volume: () => volume,
   popups: () => popups,
   soundWhenActive: () => soundWhenActive,
+  reactions: () => reactions,
 });
 
 function runInPage(func, args = []) {
@@ -167,48 +170,105 @@ function pagePatch() {
   let lastPageNotification = 0;
 
   // messenger.com relies on web push for desktop notifications, which isn't
-  // available here. So when a new-message sound plays while we're in the
-  // background, build the notification ourselves from the chat list.
+  // available here. So we build them ourselves from the chat list:
+  //   - new messages: when Messenger plays its new-message sound
+  //   - reactions:    when a chat's preview changes to "Reacted ... to your message"
+  //                   (Messenger plays no sound for those)
+  const CHAT_ROWS = '[role="grid"][aria-label="Chats"] [role="row"]';
   const recent = new Map(); // dedupe key -> time
+
+  // Text of an element with emoji images replaced by their emoji (alt text).
+  function textWithEmoji(el) {
+    let out = '';
+    const walk = (n) => {
+      if (n.nodeType === 3) out += n.nodeValue;
+      else if (n.nodeName === 'IMG') out += n.alt || '';
+      else if (n.nodeType === 1 && n.getAttribute('aria-hidden') !== 'true') n.childNodes.forEach(walk);
+    };
+    walk(el);
+    return out.replace(/\s+/g, ' ').trim();
+  }
+
+  // { name, preview, href, link, avatar } for one chat-list row
+  function readRow(row) {
+    const link = row.querySelector('a[href*="/t/"]');
+    if (!link) return null;
+    // name and preview are the first two dir="auto" spans that aren't hidden
+    // (the "Active now" label sits in an aria-hidden block before the name)
+    const spans = [...row.querySelectorAll('span[dir="auto"]')]
+      .filter((sp) => !sp.closest('[aria-hidden="true"]') && sp.textContent.trim() && !sp.parentElement.closest('span[dir="auto"]'));
+    const name = spans[0] ? spans[0].textContent.trim() : '';
+    const preview = spans[1] ? textWithEmoji(spans[1]).replace(/\s*·\s*$/, '') : '';
+    const img = [...row.querySelectorAll('img')].find((i) => i.src && !i.src.includes('/emoji.php/'));
+    return { name, preview: preview === '·' ? '' : preview, href: link.getAttribute('href'), link, avatar: img ? img.src : undefined };
+  }
+
+  const inBackground = () => background || hidDesc.get.call(document);
+
+  function showChatNotification(info) {
+    const key = info.href + '|' + info.preview;
+    const now = Date.now();
+    for (const [k, t] of recent) if (now - t > 15000) recent.delete(k);
+    if (recent.has(key)) return false;
+    recent.set(key, now);
+    const n = new Orig(info.name || 'Messenger', {
+      body: info.preview || 'New message',
+      icon: info.avatar,
+      silent: true,
+      tag: 'om-' + info.href,
+    });
+    n.addEventListener('click', () => {
+      try { om.clicked(); } catch {}
+      if (info.link && info.link.isConnected) info.link.click(); // open that chat
+      else {
+        const fresh = [...document.querySelectorAll(CHAT_ROWS + ' a[href]')].find((a) => a.getAttribute('href') === info.href);
+        if (fresh) fresh.click();
+      }
+    });
+    return true;
+  }
+
   function messageArrived() {
-    if (!background && !hidDesc.get.call(document)) return; // user is looking at the app
+    if (!inBackground()) return; // user is looking at the app
     if (!om.popups()) return; // pop-ups turned off in Settings (sound still plays)
     setTimeout(() => {
       try {
         if (Date.now() - lastPageNotification < 3000) return; // Messenger made its own
-        const rows = [...document.querySelectorAll('[role="grid"][aria-label="Chats"] [role="row"]')];
-        const rowsWithLink = rows.filter((r) => r.querySelector('a[href*="/t/"]'));
-        if (!rowsWithLink.length) return;
+        const rows = [...document.querySelectorAll(CHAT_ROWS)].map(readRow).filter(Boolean);
+        if (!rows.length) return;
         const m = /^(.+?) messaged you/.exec(document.title || '');
-        const byName = m && rowsWithLink.find((r) => (r.innerText || '').split('\n')[0].trim() === m[1].trim());
-        const row = byName || rowsWithLink[0];
-        const lines = (row.innerText || '').split('\n').map((x) => x.trim()).filter(Boolean);
-        const name = lines[0] || (m && m[1]) || 'New message';
-        let preview = lines[1] || '';
-        if (/^You[:\s]/.test(preview)) return; // our own message, not an incoming one
-        if (preview === '·') preview = '';
-        const link = row.querySelector('a[href*="/t/"]');
-        const key = (link && link.getAttribute('href')) + '|' + preview;
-        const now = Date.now();
-        for (const [k, t] of recent) if (now - t > 15000) recent.delete(k);
-        if (recent.has(key)) return;
-        recent.set(key, now);
-        const img = row.querySelector('img');
-        const n = new Orig(name, {
-          body: preview || 'New message',
-          icon: img && img.src ? img.src : undefined,
-          silent: true,
-          tag: 'om-' + (link ? link.getAttribute('href') : name),
-        });
-        n.addEventListener('click', () => {
-          try { om.clicked(); } catch {}
-          if (link) link.click(); // open that chat
-        });
+        const info = (m && rows.find((r) => r.name === m[1].trim())) || rows[0];
+        if (/^You[:\s]/.test(info.preview)) return; // our own message, not an incoming one
+        showChatNotification(info);
       } catch (err) {
         console.warn('[OpenMessenger] notification failed', err);
       }
     }, 600); // give the chat list a moment to update
   }
+
+  // ---- reactions: watch chat previews for "Reacted ... to your message"
+  const REACTION = /\breacted\b.*\bto your message\b/i;
+  let previews = null; // href -> last seen preview
+  let scanTimer = 0;
+  function scanForReactions() {
+    const rows = [...document.querySelectorAll(CHAT_ROWS)].map(readRow).filter(Boolean);
+    if (!rows.length) return;
+    const first = previews === null;
+    const seen = new Map(rows.map((r) => [r.href, r.preview]));
+    if (!first && inBackground() && om.popups() && om.reactions()) {
+      for (const r of rows) {
+        if (!REACTION.test(r.preview) || previews.get(r.href) === r.preview) continue;
+        if (showChatNotification(r)) {
+          if (om.soundMode() === 'messenger') playMessengerSound(); else om.messageSound();
+        }
+      }
+    }
+    previews = seen;
+  }
+  new MutationObserver(() => {
+    clearTimeout(scanTimer);
+    scanTimer = setTimeout(scanForReactions, 500);
+  }).observe(document, { subtree: true, childList: true, characterData: true });
 
   if (Orig && !Orig.__openMessenger) {
     function OMNotification(title, options) {

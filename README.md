@@ -35,7 +35,8 @@ Messenger's features, calls included, the same as in a browser.
 - **Notification sounds.** Four gentle built-in sounds, your own, or Messenger's default.
   Your choice replaces Messenger's own message sound. Adjustable volume.
 - **Desktop integration.** Native notifications whenever OpenMessenger isn't the active window,
-  like a background browser tab (click one to jump to the chat), an unread count on
+  like a background browser tab (click one to jump to the chat), optional notifications when
+  someone reacts to your message (Messenger in English only, for now), an unread count on
   the taskbar icon, a tray icon, close-to-tray, and a **Settings** entry when you right-click the
   taskbar icon.
 - **Portable on Windows.** Your login, settings, themes and sounds live in a `data` folder next
@@ -89,7 +90,7 @@ from the menu bar (press `Alt`):
 | --- | --- |
 | Appearance | Theme cards with a preview, plus a button to open the themes folder |
 | Accent color | Color wheel, brightness, hex/RGB, presets, pick-from-screen, "use theme's suggestion", recolor chats |
-| Notifications | Pop-up notifications on/off, sound while the app is active on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
+| Notifications | Pop-up notifications on/off, reaction notifications on/off, sound while the app is active on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
 | Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
 
 Other shortcuts: zoom with `Ctrl +` / `Ctrl -` / `Ctrl 0`, reload the theme with `Ctrl+Shift+R`,
@@ -133,6 +134,8 @@ so Meta serves its normal web client. A small preload script does three things:
 - It wraps the page's `Notification` API, so the Windows notification stays silent and your chosen
   sound plays instead.
 - It swaps Messenger's short message sound for yours. Call ringtones are left alone.
+- It watches the chat list for "Reacted … to your message" previews, because Messenger plays no
+  sound for reactions. This currently only recognizes Messenger's **English** wording.
 
 Themes are injected as stylesheets that override Messenger's own CSS variables. The accent color
 is generated as a separate layer on top, including CSS-filter values for the icons Meta tints with
