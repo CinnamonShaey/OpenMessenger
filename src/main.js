@@ -455,7 +455,7 @@ function getAutostart() {
 }
 function setAutostart(on) {
   if (!autostartSupported()) return;
-  // v0.2.0 registered under the app ID; clear that so there's never a duplicate.
+  // Early dev builds registered under the app ID; clear that so there's never a duplicate.
   app.setLoginItemSettings({ openAtLogin: false, path: process.execPath, args: AUTOSTART_ARGS, name: APP_ID });
   // enabled:true also re-enables it if it had been switched off in Task Manager
   app.setLoginItemSettings(loginOpts({ openAtLogin: on, enabled: on }));
@@ -664,7 +664,7 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 app.whenReady().then(() => {
   registerOmProtocol();
   registerNotificationIdentity();
-  // Migrate a v0.2.0 startup entry (named after the app ID) to the new name.
+  // Migrate an early dev-build startup entry (named after the app ID) to the new name.
   if (autostartSupported() && app.getLoginItemSettings({ path: process.execPath, args: AUTOSTART_ARGS, name: APP_ID }).openAtLogin) {
     setAutostart(true);
   }

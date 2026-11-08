@@ -28,7 +28,7 @@ try {
   /* first run or unreadable: use defaults */
 }
 
-// v0.1 shipped "OLED Purple" themes; they became OLED + a purple accent.
+// Early dev builds had "OLED Purple" themes; they became OLED + a purple accent.
 if (current.theme === 'oled-purple.css' || current.theme === 'oled-purple-all-chats.css') {
   current.recolorChats = current.theme === 'oled-purple-all-chats.css';
   current.theme = 'oled.css';
