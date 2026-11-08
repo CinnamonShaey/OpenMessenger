@@ -187,7 +187,7 @@ function soundPayload(wc) {
     if (file) { try { data = fs.readFileSync(file); mode = 'custom'; } catch {} }
   }
   const isMain = !!(mainWindow && !mainWindow.isDestroyed() && wc === mainWindow.webContents);
-  return { data, volume: settings.get('volume'), mode, isMain, popups: settings.get('popups') };
+  return { data, volume: settings.get('volume'), mode, isMain, popups: settings.get('popups'), soundWhenActive: settings.get('soundWhenActive') };
 }
 
 function sendSound(wc) {
@@ -484,6 +484,7 @@ function applySetting(key, value) {
     case 'sound':
     case 'volume':
     case 'popups':
+    case 'soundWhenActive':
       sendSoundEverywhere();
       break;
     default:
@@ -506,6 +507,7 @@ function settingsState() {
       sound: settings.get('sound'),
       volume: settings.get('volume'),
       popups: settings.get('popups'),
+      soundWhenActive: settings.get('soundWhenActive'),
       closeToTray: settings.get('closeToTray'),
       startMinimized: settings.get('startMinimized'),
       startWithWindows: getAutostart(),
@@ -558,7 +560,7 @@ function openSettings() {
 
 ipcMain.handle('settings:get', () => settingsState());
 ipcMain.handle('settings:set', (_e, key, value) => {
-  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'popups', 'closeToTray', 'startMinimized', 'startWithWindows'];
+  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'popups', 'soundWhenActive', 'closeToTray', 'startMinimized', 'startWithWindows'];
   if (!allowed.includes(key)) return false;
   if (key === 'volume') value = Math.min(1, Math.max(0, Number(value) || 0));
   if (key === 'accent' && !/^#[0-9a-f]{6}$/i.test(value)) return false;

@@ -264,7 +264,7 @@ $('volume').addEventListener('change', async (e) => {
 $('test').addEventListener('click', () => window.om.testSound());
 
 // ------------------------------------------------------------------ behaviour
-for (const key of ['recolorChats', 'popups', 'closeToTray', 'startMinimized', 'startWithWindows']) {
+for (const key of ['recolorChats', 'popups', 'soundWhenActive', 'closeToTray', 'startMinimized', 'startWithWindows']) {
   $(key).addEventListener('change', (e) => { state.settings[key] = e.target.checked; window.om.set(key, e.target.checked); });
 }
 document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => window.om.open(b.dataset.open)));
@@ -302,6 +302,7 @@ function render(s) {
   $('version').textContent = `v${s.version}`;
   $('recolorChats').checked = s.settings.recolorChats;
   $('popups').checked = s.settings.popups;
+  $('soundWhenActive').checked = s.settings.soundWhenActive;
   $('closeToTray').checked = s.settings.closeToTray;
   $('startMinimized').checked = s.settings.startMinimized;
   $('startWithWindows').checked = s.settings.startWithWindows;

@@ -14,6 +14,7 @@ const defaults = {
   sound: 'gentle.wav',      // file name in sounds/, or "" for silent
   volume: 0.5,
   popups: true,             // show desktop notification pop-ups
+  soundWhenActive: false,   // also play the sound while OpenMessenger is the active window
   closeToTray: true,
   startMinimized: false,
   spellcheckLanguages: ['en-US', 'da'],

@@ -89,7 +89,7 @@ from the menu bar (press `Alt`):
 | --- | --- |
 | Appearance | Theme cards with a preview, plus a button to open the themes folder |
 | Accent color | Color wheel, brightness, hex/RGB, presets, pick-from-screen, "use theme's suggestion", recolor chats |
-| Notifications | Pop-up notifications on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
+| Notifications | Pop-up notifications on/off, sound while the app is active on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
 | Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
 
 Other shortcuts: zoom with `Ctrl +` / `Ctrl -` / `Ctrl 0`, reload the theme with `Ctrl+Shift+R`,

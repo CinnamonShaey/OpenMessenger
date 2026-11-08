@@ -21,6 +21,7 @@ let volume = 0.5;
 let mode = 'custom';   // 'custom' | 'silent' | 'messenger'
 let isMain = false;    // only the main window replaces Messenger's sounds
 let popups = true;     // show desktop notification pop-ups
+let soundWhenActive = false; // also ping while the app is the active window
 let lastPlay = 0;
 
 ipcRenderer.on('om:sound', (_e, p) => {
@@ -30,6 +31,7 @@ ipcRenderer.on('om:sound', (_e, p) => {
   mode = p.mode;
   isMain = !!p.isMain;
   popups = p.popups !== false;
+  soundWhenActive = !!p.soundWhenActive;
   decoded = null;
 });
 ipcRenderer.on('om:play', () => {
@@ -72,6 +74,7 @@ contextBridge.exposeInMainWorld('__openMessenger', {
   isMainWindow: () => isMain,
   volume: () => volume,
   popups: () => popups,
+  soundWhenActive: () => soundWhenActive,
 });
 
 function runInPage(func, args = []) {
@@ -126,17 +129,16 @@ function pagePatch() {
     const src = this.currentSrc || this.src || '';
     if (!(this instanceof HTMLVideoElement) && !this.loop && isMetaSound(src) && om.isMainWindow()) {
       const el = this;
-      const replace = om.soundMode() !== 'messenger';
-      if (replace) { el.muted = true; el.__omMuted = true; } // decided once metadata is known
+      el.muted = true; el.__omMuted = true; // decided once its length is known
+      const unmute = () => { if (el.__omMuted) { el.muted = false; el.__omMuted = false; } };
       const decide = () => {
         const isMessageSound = el.duration > 0 && el.duration < 4 && !el.loop;
-        if (!isMessageSound || !replace) {
-          if (el.__omMuted) { el.muted = false; el.__omMuted = false; } // ringtones etc. untouched
-        }
-        if (!isMessageSound) return;
+        if (!isMessageSound) { unmute(); return; } // ringtones etc. untouched
         messengerSoundUrl = src;
         lastMessengerSound = Date.now();
-        if (replace) om.messageSound();
+        const active = !background && !hidDesc.get.call(document);
+        if (active && !om.soundWhenActive()) return; // you're looking at the app: no ping
+        if (om.soundMode() === 'messenger') unmute(); else om.messageSound();
         messageArrived();
       };
       if (el.readyState >= 1) decide(); else el.addEventListener('loadedmetadata', decide, { once: true });
