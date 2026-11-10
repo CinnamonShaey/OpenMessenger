@@ -44,6 +44,8 @@ Messenger's features, calls included, the same as in a browser.
   (see *Uninstalling*).
 - **Optional start with Windows.** Off by default, with an option to start minimized to the tray.
 - **Your own CSS themes.** They reload live while you edit them.
+- **Screen-share picker.** When you share your screen in a call, pick a screen or window from live
+  previews, with an option to include your PC's audio.
 - Right-click menu with spell-check suggestions, copy/save image, and open-link-in-browser.
   External links open in your normal browser.
 

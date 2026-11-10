@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' om: data:">
+  <title>Share your screen</title>
+  <link rel="stylesheet" href="picker.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Share your screen</h1>
+      <p>Choose what the people in the call will see.</p>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="screen" class="active">Screens <span id="countScreen"></span></button>
+      <button role="tab" data-tab="window">Windows <span id="countWindow"></span></button>
+    </nav>
+  </header>
+
+  <main id="grid" role="listbox" aria-label="Sources"></main>
+  <div class="empty" id="empty" hidden>Nothing to show here.</div>
+
+  <footer>
+    <label class="toggle" id="audioRow">
+      <input type="checkbox" id="audio" checked>
+      <span class="switch"></span>
+      <span>Share audio <small>Sounds from your PC, like videos and games</small></span>
+    </label>
+    <div class="buttons">
+      <button class="ghost" id="cancel">Cancel</button>
+      <button id="share" disabled>Share</button>
+    </div>
+  </footer>
+
+  <script src="picker.js"></script>
+</body>
+</html>

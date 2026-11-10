@@ -93,7 +93,7 @@ let settingsWindow = null;
 
 // Messenger windows only (main window + call popups), never the Settings window.
 function allWindows() {
-  return BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed() && w !== settingsWindow);
+  return BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed() && w !== settingsWindow && !(picker && w === picker.win));
 }
 
 function showMain() {
@@ -370,26 +370,106 @@ function setupSession() {
   });
   ses.setPermissionCheckHandler((_wc, permission, origin) => allowed.has(permission) && isInternal(origin));
 
-  // Screen sharing during calls: let the user pick a screen or window.
-  ses.setDisplayMediaRequestHandler(async (_req, cb) => {
+  // Screen sharing during calls. Messenger does the sharing; Electron just has
+  // no built-in "what do you want to share?" picker like Chrome, so we show one.
+  ses.setDisplayMediaRequestHandler(async (req, cb) => {
     try {
-      const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
-      const shown = sources.slice(0, 12);
-      const { response } = await dialog.showMessageBox(BrowserWindow.getFocusedWindow() || mainWindow, {
-        type: 'question',
-        title: 'Share your screen',
-        message: 'What do you want to share?',
-        buttons: [...shown.map((s) => s.name.slice(0, 60)), 'Cancel'],
-        cancelId: shown.length,
-        noLink: true,
-      });
-      if (response >= shown.length) return cb({});
-      cb({ video: shown[response], audio: process.platform === 'win32' ? 'loopback' : undefined });
+      const wc = webContentsOf(req);
+      const parent = (wc && BrowserWindow.fromWebContents(wc)) || BrowserWindow.getFocusedWindow() || mainWindow;
+      const choice = await pickShareSource(parent);
+      if (!choice) return cb({});
+      cb({ video: choice.source, audio: choice.audio && process.platform === 'win32' ? 'loopback' : undefined });
     } catch {
       cb({});
     }
   });
 }
+
+function webContentsOf(req) {
+  try { return require('electron').webContents.fromFrame(req.frame); } catch { return null; }
+}
+
+// ------------------------------------------------------------------ screen-share picker
+let picker = null; // { win, sources: Map, resolve }
+
+async function pickShareSource(parent) {
+  if (picker) { picker.resolve(null); try { picker.win.destroy(); } catch {} picker = null; }
+
+  const raw = await desktopCapturer.getSources({
+    types: ['screen', 'window'],
+    thumbnailSize: { width: 400, height: 225 },
+    fetchWindowIcons: true,
+  });
+  const ownTitles = new Set(BrowserWindow.getAllWindows().map((w) => w.getTitle()));
+  const sources = new Map();
+  const list = [];
+  for (const s of raw) {
+    const isScreen = s.id.startsWith('screen:');
+    if (!isScreen && (s.thumbnail.isEmpty() || !s.name.trim())) continue; // invisible/minimised junk
+    sources.set(s.id, s);
+    list.push({
+      id: s.id,
+      kind: isScreen ? 'screen' : 'window',
+      name: s.name,
+      own: !isScreen && ownTitles.has(s.name),
+      thumb: s.thumbnail.isEmpty() ? '' : s.thumbnail.toDataURL(),
+      icon: s.appIcon && !s.appIcon.isEmpty() ? s.appIcon.resize({ width: 32, height: 32 }).toDataURL() : '',
+    });
+  }
+
+  return new Promise((resolve) => {
+    const W = 880, H = 640;
+    const area = screen.getDisplayMatching((parent && !parent.isDestroyed() ? parent : mainWindow).getBounds()).workArea;
+    const win = new BrowserWindow({
+      width: Math.min(W, area.width - 40),
+      height: Math.min(H, area.height - 40),
+      x: Math.round(area.x + (area.width - Math.min(W, area.width - 40)) / 2),
+      y: Math.round(area.y + (area.height - Math.min(H, area.height - 40)) / 2),
+      minWidth: 560,
+      minHeight: 420,
+      parent: parent && !parent.isDestroyed() ? parent : undefined,
+      modal: !!(parent && !parent.isDestroyed()),
+      title: 'Share your screen',
+      backgroundColor: '#0b0b0e',
+      minimizable: false,
+      maximizable: false,
+      autoHideMenuBar: true,
+      show: false,
+      icon: path.join(paths.assets, process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+      webPreferences: {
+        preload: path.join(__dirname, 'settings-ui', 'picker-preload.js'),
+        contextIsolation: true,
+        sandbox: true,
+        nodeIntegration: false,
+      },
+    });
+    win.setMenu(null);
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      picker = null;
+      resolve(result);
+      if (!win.isDestroyed()) win.destroy();
+    };
+    picker = { win, sources, resolve: finish, list };
+    win.on('closed', () => finish(null));
+    win.once('ready-to-show', () => { win.show(); win.focus(); });
+    win.loadURL('om://settings/picker.html');
+  });
+}
+
+ipcMain.handle('picker:get', () => ({
+  sources: picker ? picker.list : [],
+  accent: settings.get('accent'),
+  audioSupported: process.platform === 'win32',
+}));
+ipcMain.on('picker:choose', (_e, id, audio) => {
+  if (!picker) return;
+  const source = picker.sources.get(id);
+  picker.resolve(source ? { source, audio: !!audio } : null);
+});
+ipcMain.on('picker:cancel', () => { if (picker) picker.resolve(null); });
 
 // ------------------------------------------------------------------ menus
 function createDesktopShortcut() {
