@@ -34,11 +34,10 @@ Messenger's features, calls included, the same as in a browser.
   message bubbles with it.
 - **Notification sounds.** Four gentle built-in sounds, your own, or Messenger's default.
   Your choice replaces Messenger's own message sound. Adjustable volume.
-- **Desktop integration.** Native notifications whenever OpenMessenger isn't the active window,
-  like a background browser tab (click one to jump to the chat), optional notifications when
-  someone reacts to your message (Messenger in English only, for now), an unread count on
-  the taskbar icon, a tray icon, close-to-tray, and a **Settings** entry when you right-click the
-  taskbar icon.
+- **Desktop integration.** Windows notifications with the sender, message and profile picture
+  whenever OpenMessenger isn't the active window (click one to open that chat), optional
+  notifications when someone reacts to your message, an unread count on the taskbar icon, a tray
+  icon, close-to-tray, and a **Settings** entry when you right-click the taskbar icon.
 - **Portable on Windows.** Your login, settings, themes and sounds live in a `data` folder next
   to `OpenMessenger.exe`. Outside that folder, the app only writes two small registry entries
   (see *Uninstalling*).
@@ -109,6 +108,16 @@ developer tools with `Ctrl+Shift+I`.
 - **Sounds:** Settings → **Open sounds folder** (`data\sounds`), add `.wav`, `.mp3`, `.ogg`, `.m4a`
   or `.flac` files, and reopen Settings. Short sounds (under 1 second) work best.
 
+## Known limitations
+
+- **Calls:** the app's parts (microphone, speakers, the screen-share picker and system audio) are
+  tested, but a full two-way call hasn't been tested yet. Calls run on Messenger's own code, the
+  same as in Chrome.
+- **Reaction notifications** only recognize Messenger's English wording for now.
+- **Notifications are built from Messenger's chat list.** If Meta redesigns messenger.com,
+  notifications or themes may break until OpenMessenger is updated.
+- **macOS and Linux** builds are untested (see above).
+
 ## Privacy and security
 
 - **Your password is never stored.** Like a browser, the app keeps Messenger's login session
@@ -129,15 +138,19 @@ developer tools with `Ctrl+Shift+I`.
 ## How it works
 
 OpenMessenger loads `messenger.com` in a Chromium window and reports a standard Chrome user agent,
-so Meta serves its normal web client. A small preload script does three things:
+so Meta serves its normal web client. A small preload script adds the desktop parts:
 
-- While the window isn't active, it tells Messenger the page is in the background, so Messenger
-  shows its normal desktop notifications, the same as for a background browser tab.
-- It wraps the page's `Notification` API, so the Windows notification stays silent and your chosen
-  sound plays instead.
-- It swaps Messenger's short message sound for yours. Call ringtones are left alone.
-- It watches the chat list for "Reacted … to your message" previews, because Messenger plays no
-  sound for reactions. This currently only recognizes Messenger's **English** wording.
+- **Notifications.** In a browser, messenger.com shows desktop notifications through web push,
+  which this kind of app doesn't support. So when a new message arrives while the window isn't
+  active, OpenMessenger reads the sender, preview and picture from the chat list and shows the
+  Windows notification itself.
+- **Reactions.** Messenger plays no sound for reactions, so the app watches the chat list for
+  "Reacted … to your message" previews.
+- **Sound.** Messenger's short message sound is swapped for yours. Call ringtones are left alone.
+  Any notification Messenger creates itself is made silent so you don't hear two sounds.
+
+Screen sharing is Messenger's own feature. Chrome has a built-in "what do you want to share?"
+picker, but Electron doesn't, so OpenMessenger provides that one window.
 
 Themes are injected as stylesheets that override Messenger's own CSS variables. The accent color
 is generated as a separate layer on top, including CSS-filter values for the icons Meta tints with
@@ -165,11 +178,12 @@ npm run assets     # regenerate icon, badges and sounds (needs uv)
 Layout:
 
 ```
-src/main.js             app window, tray, menus, permissions, settings window, start-with-Windows
-src/preload.js          runs in the Messenger page: silences toasts and plays the chosen sound
+src/main.js             app window, tray, menus, permissions, settings window, screen-share picker,
+                        start-with-Windows, notification registration
+src/preload.js          runs in the Messenger page: notifications, reactions, sound replacement
 src/theme.js            theme loading (@extends chains) + generated accent layer
 src/color.js            color math + CSS-filter solver
-src/settings-ui/        the Settings window (served from a private om:// scheme)
+src/settings-ui/        the Settings and screen-share picker windows (served from a private om:// scheme)
 src/paths.js            where data is stored (portable on Windows)
 src/settings.js         data/settings.json
 themes/                 built-in themes (see themes/README.md)
