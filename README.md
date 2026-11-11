@@ -11,6 +11,20 @@ app again: its own window, taskbar badge, tray icon and native notifications, wr
 Messenger's own web client (messenger.com). Because it runs Messenger's own client, you get
 Messenger's features, calls included, the same as in a browser.
 
+<p align="center">
+  <img src="docs/screenshots/main.png" width="720" alt="OpenMessenger with the OLED theme and a purple accent">
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center"><a href="docs/screenshots/settings-appearance.png"><img src="docs/screenshots/settings-appearance.png" width="230" alt="Settings: themes"></a><br><sub>Themes</sub></td>
+    <td align="center"><a href="docs/screenshots/settings-accent.png"><img src="docs/screenshots/settings-accent.png" width="230" alt="Settings: accent color"></a><br><sub>Accent color</sub></td>
+    <td align="center"><a href="docs/screenshots/settings-notifications.png"><img src="docs/screenshots/settings-notifications.png" width="230" alt="Settings: notifications"></a><br><sub>Notifications</sub></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Screenshots use made-up names and messages.</sub></p>
+
 > [!IMPORTANT]
 > **Not affiliated with Meta.** OpenMessenger is an independent, unofficial project. It is not
 > affiliated with, endorsed by, sponsored by or connected to Meta Platforms, Inc. in any way.
@@ -190,6 +204,7 @@ themes/                 built-in themes (see themes/README.md)
 assets/                 icon, tray icon, unread badges, built-in sounds
 scripts/make-assets.py  generates everything in assets/ (no third-party artwork or audio)
 scripts/cdp.js          poke at a running `npm run dev` build: evaluate JS, take screenshots
+docs/screenshots/       images used in this README
 ```
 
 ### Publishing a release
