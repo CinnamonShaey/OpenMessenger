@@ -202,6 +202,15 @@ function sendBackground() {
   mainWindow.webContents.send('om:background', !mainWindow.isFocused());
 }
 
+// ------------------------------------------------------------------ zoom
+// Half-level steps (about 10% each), remembered between restarts.
+// step: +1 zoom in, -1 zoom out, 0 reset.
+function changeZoom(step) {
+  const level = step === 0 ? 0 : Math.min(5, Math.max(-5, (settings.get('zoomLevel') || 0) + step * 0.5));
+  settings.set('zoomLevel', level);
+  for (const w of allWindows()) w.webContents.setZoomLevel(level);
+}
+
 // ------------------------------------------------------------------ unread badge
 function updateUnread(title) {
   const m = /\((\d+)\)/.exec(title || '');
@@ -270,7 +279,9 @@ function webPreferences() {
 function wireContents(wc) {
   wc.setUserAgent(USER_AGENT);
   attachContextMenu(wc);
-  wc.on('dom-ready', () => { applyTheme(wc); sendSound(wc); sendBackground(); });
+  wc.on('dom-ready', () => { applyTheme(wc); sendSound(wc); sendBackground(); wc.setZoomLevel(settings.get('zoomLevel')); });
+  // Ctrl + mouse wheel / touchpad pinch: Electron reports it but leaves zooming to the app.
+  wc.on('zoom-changed', (_e, direction) => changeZoom(direction === 'in' ? 1 : -1));
 
   wc.on('will-navigate', (e, url) => {
     if (!isInternal(url)) { e.preventDefault(); openExternal(url); }
@@ -700,8 +711,11 @@ function rebuildMenus() {
       { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
     { label: 'View', submenu: [
       { role: 'reload' }, { role: 'forceReload' }, { type: 'separator' },
-      { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomIn', accelerator: 'CmdOrCtrl+=', visible: false },
-      { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' },
+      { label: 'Actual size', accelerator: 'CmdOrCtrl+0', click: () => changeZoom(0) },
+      { label: 'Zoom in', accelerator: 'CmdOrCtrl+Plus', click: () => changeZoom(1) },
+      { label: 'Zoom in', accelerator: 'CmdOrCtrl+=', visible: false, click: () => changeZoom(1) },
+      { label: 'Zoom out', accelerator: 'CmdOrCtrl+-', click: () => changeZoom(-1) },
+      { type: 'separator' }, { role: 'togglefullscreen' },
       { type: 'separator' }, { role: 'toggleDevTools' },
     ] },
     { label: 'Help', submenu: [
@@ -729,6 +743,7 @@ function createTray() {
 }
 
 // ------------------------------------------------------------------ IPC
+ipcMain.on('om:zoom', (_e, step) => changeZoom(step > 0 ? 1 : -1));
 ipcMain.on('om:notification-click', showMain);
 // The unread badge on the taskbar icon is the indicator; no blinking taskbar button.
 ipcMain.on('om:notified', () => {});

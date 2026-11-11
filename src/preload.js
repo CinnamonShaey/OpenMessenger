@@ -92,6 +92,22 @@ ipcRenderer.on('om:background', (_e, on) => {
   runInPage((b) => { if (window.__omSetBackground) window.__omSetBackground(b); }, [!!on]);
 });
 
+// Ctrl + mouse wheel zoom. Handled here (not only via Electron's 'zoom-changed')
+// so it works reliably; touchpad scrolls are accumulated into whole steps.
+let wheelAcc = 0;
+let wheelTimer = 0;
+window.addEventListener('wheel', (e) => {
+  if (!e.ctrlKey) return;
+  e.preventDefault();
+  wheelAcc += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY; // lines -> pixels
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(() => { wheelAcc = 0; }, 300);
+  while (Math.abs(wheelAcc) >= 100) {
+    ipcRenderer.send('om:zoom', wheelAcc < 0 ? 1 : -1);
+    wheelAcc -= Math.sign(wheelAcc) * 100;
+  }
+}, { passive: false, capture: true });
+
 // ------------------------------------------------------------------ page patch
 // Executed in the page's own JS world, before Messenger's scripts run.
 function pagePatch() {

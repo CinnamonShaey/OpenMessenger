@@ -21,6 +21,7 @@ const defaults = {
   spellcheckLanguages: ['en-US', 'da'],
   windowBounds: { width: 1200, height: 800 },
   windowMaximized: false,
+  zoomLevel: 0,             // Chrome-style zoom level for Messenger windows (0 = 100%)
 };
 
 let current = { ...defaults };

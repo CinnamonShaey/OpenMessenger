@@ -121,7 +121,8 @@ from the menu bar (press `Alt`):
 | Notifications | Pop-up notifications on/off, reaction notifications on/off, sound while the app is active on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
 | Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
 
-Other shortcuts: zoom with `Ctrl +` / `Ctrl -` / `Ctrl 0`, reload the theme with `Ctrl+Shift+R`,
+Other shortcuts: zoom with `Ctrl + scroll wheel` or `Ctrl +` / `Ctrl -` (`Ctrl 0` resets, and
+the zoom level is remembered), reload the theme with `Ctrl+Shift+R`,
 developer tools with `Ctrl+Shift+I`.
 
 > **Moved the app folder?** Turn *Start with Windows* off and on again so it points to the new
