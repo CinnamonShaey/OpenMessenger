@@ -1,7 +1,7 @@
 {
   "name": "openmessenger",
   "productName": "OpenMessenger",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "A portable desktop app for Facebook Messenger with custom themes and notification sounds.",
   "main": "src/main.js",
   "private": true,
@@ -16,6 +16,13 @@
   },
   "build": {
     "appId": "io.github.cinnamonshaey.openmessenger",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "CinnamonShaey",
+        "repo": "OpenMessenger"
+      }
+    ],
     "productName": "OpenMessenger",
     "files": [
       "src/**",
@@ -80,5 +87,8 @@
   "devDependencies": {
     "electron": "^45.2.3",
     "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }

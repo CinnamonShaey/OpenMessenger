@@ -11,4 +11,12 @@ contextBridge.exposeInMainWorld('om', {
   open: (what) => ipcRenderer.send('settings:open', what),
   createShortcut: () => ipcRenderer.send('settings:shortcut'),
   onState: (cb) => ipcRenderer.on('settings:state', (_e, s) => cb(s)),
+  onGoto: (cb) => ipcRenderer.on('settings:goto', (_e, id) => cb(id)),
+  update: {
+    get: () => ipcRenderer.invoke('update:get'),
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.send('update:download'),
+    install: () => ipcRenderer.send('update:install'),
+    onState: (cb) => ipcRenderer.on('update:state', (_e, s) => cb(s)),
+  },
 });

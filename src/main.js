@@ -3,9 +3,10 @@
 const paths = require('./paths'); // must be first: redirects all app data into data\
 const settings = require('./settings');
 const themeEngine = require('./theme');
+const updater = require('./updater');
 const {
   app, BrowserWindow, Tray, Menu, shell, ipcMain, nativeImage, session,
-  desktopCapturer, dialog, clipboard, protocol, screen,
+  desktopCapturer, dialog, clipboard, protocol, screen, Notification,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -601,6 +602,7 @@ function settingsState() {
       popups: settings.get('popups'),
       soundWhenActive: settings.get('soundWhenActive'),
       reactions: settings.get('reactions'),
+      autoUpdateCheck: settings.get('autoUpdateCheck'),
       closeToTray: settings.get('closeToTray'),
       startMinimized: settings.get('startMinimized'),
       startWithWindows: getAutostart(),
@@ -617,10 +619,11 @@ function pushSettingsState() {
   if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('settings:state', settingsState());
 }
 
-function openSettings() {
+function openSettings(section) {
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
+    if (typeof section === 'string') settingsWindow.webContents.send('settings:goto', section);
     return;
   }
   settingsWindow = new BrowserWindow({
@@ -642,7 +645,7 @@ function openSettings() {
     },
   });
   settingsWindow.setMenu(null);
-  settingsWindow.loadURL('om://settings/index.html');
+  settingsWindow.loadURL('om://settings/index.html' + (typeof section === 'string' ? '#' + section : ''));
   settingsWindow.once('ready-to-show', () => settingsWindow.show());
   settingsWindow.webContents.setWindowOpenHandler(({ url }) => { openExternal(url); return { action: 'deny' }; });
   settingsWindow.on('closed', () => {
@@ -653,7 +656,7 @@ function openSettings() {
 
 ipcMain.handle('settings:get', () => settingsState());
 ipcMain.handle('settings:set', (_e, key, value) => {
-  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'popups', 'soundWhenActive', 'reactions', 'closeToTray', 'startMinimized', 'startWithWindows'];
+  const allowed = ['theme', 'accent', 'recolorChats', 'sound', 'volume', 'popups', 'soundWhenActive', 'reactions', 'autoUpdateCheck', 'closeToTray', 'startMinimized', 'startWithWindows'];
   if (!allowed.includes(key)) return false;
   if (key === 'volume') value = Math.min(1, Math.max(0, Number(value) || 0));
   if (key === 'accent' && !/^#[0-9a-f]{6}$/i.test(value)) return false;
@@ -671,6 +674,54 @@ ipcMain.on('settings:open', (_e, what) => {
   if (target) shell.openPath(target);
 });
 ipcMain.on('settings:shortcut', createDesktopShortcut);
+
+// ------------------------------------------------------------------ updates
+let notifiedVersion = null;
+
+function pushUpdateState(st) {
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('update:state', st);
+  rebuildMenus();
+}
+
+updater.onChange((st) => {
+  pushUpdateState(updater.getState());
+  // One notification per new version found.
+  if (st.status === 'available' && st.latest && st.latest !== notifiedVersion && Notification.isSupported()) {
+    notifiedVersion = st.latest;
+    const n = new Notification({
+      title: `OpenMessenger ${st.latest} is available`,
+      body: updater.isInstalled() ? 'Click to update.' : 'Click to see the download page.',
+      icon: path.join(paths.assets, 'icon.png'),
+      silent: true,
+    });
+    n.on('click', () => openSettings('updates'));
+    n.show();
+  }
+});
+
+function startUpdateChecks() {
+  if (!app.isPackaged) return;
+  const auto = () => { if (settings.get('autoUpdateCheck')) updater.check(); };
+  setTimeout(auto, 15 * 1000);            // shortly after start
+  setInterval(auto, 6 * 60 * 60 * 1000);  // and every 6 hours
+}
+
+function installUpdate() {
+  updater.installAndRestart(() => { quitting = true; settings.flush(); });
+}
+
+ipcMain.handle('update:get', () => updater.getState());
+ipcMain.handle('update:check', () => updater.check());
+ipcMain.on('update:download', () => updater.download());
+ipcMain.on('update:install', installUpdate);
+
+function updateMenuItems() {
+  const st = updater.getState();
+  if (st.status === 'ready') return [{ label: `Restart to update to ${st.latest}`, click: installUpdate }, { type: 'separator' }];
+  if (st.status === 'available') return [{ label: `Update available: ${st.latest}`, click: () => openSettings('updates') }, { type: 'separator' }];
+  if (st.status === 'downloading') return [{ label: `Downloading update… ${st.progress}%`, enabled: false }, { type: 'separator' }];
+  return [];
+}
 
 function settingsMenu() {
   const themeItems = [{ label: 'None (Messenger default)', type: 'radio', checked: !settings.get('theme'),
@@ -719,6 +770,7 @@ function rebuildMenus() {
       { type: 'separator' }, { role: 'toggleDevTools' },
     ] },
     { label: 'Help', submenu: [
+      { label: 'Check for updates…', click: () => { openSettings('updates'); updater.check(); } },
       { label: 'Project page', click: () => openExternal('https://github.com/CinnamonShaey/OpenMessenger') },
       { label: `Version ${app.getVersion()} (Electron ${process.versions.electron})`, enabled: false },
     ] },
@@ -727,6 +779,7 @@ function rebuildMenus() {
 
   if (tray) {
     tray.setContextMenu(Menu.buildFromTemplate([
+      ...updateMenuItems(),
       { label: 'Show OpenMessenger', click: showMain },
       { type: 'separator' },
       ...settingsMenu(),
@@ -774,6 +827,7 @@ app.whenReady().then(() => {
   createMainWindow();
   watchTheme();
   mainWindow.on('focus', sendBackground);
+  startUpdateChecks();
   mainWindow.on('blur', sendBackground);
   mainWindow.on('show', sendBackground);
   mainWindow.on('hide', sendBackground);

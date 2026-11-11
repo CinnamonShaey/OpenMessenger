@@ -192,4 +192,18 @@ input[type=range]::-webkit-slider-thumb {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 25%, var(--raised)); border-radius: 4px; }
 
+/* ---------- updates ---------- */
+.sidebar a .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
+.update-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-top: 12px; max-width: 620px;
+}
+.update-card.highlight { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.update-title { font-weight: 600; font-size: 15px; }
+.update-info { flex: 1; min-width: 220px; }
+.update-info .hint { margin: 2px 0 0; }
+.update-actions { display: flex; gap: 8px; }
+.progress { height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; margin-top: 10px; }
+.progress div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
 [hidden] { display: none !important; }

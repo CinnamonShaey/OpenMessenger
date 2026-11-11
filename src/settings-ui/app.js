@@ -296,6 +296,52 @@ links.forEach((a) => a.addEventListener('click', () => {
   clickTimer = setTimeout(() => { clickedLink = null; }, 900); // after the smooth scroll settles
 }));
 
+
+// ------------------------------------------------------------------ updates
+function renderUpdate(u) {
+  if (!u) return;
+  const st = u.status;
+  $('updateTitle').textContent = `OpenMessenger ${u.current}`;
+  const msg = {
+    idle: 'Press "Check for updates" to look for a new version.',
+    checking: 'Checking for updates…',
+    'up-to-date': 'You have the latest version.',
+    available: u.canInstall ? `Version ${u.latest} is available.` : `Version ${u.latest} is available. Download it from GitHub.`,
+    downloading: `Downloading version ${u.latest}… ${u.progress}%`,
+    ready: `Version ${u.latest} is ready. Restart OpenMessenger to finish updating.`,
+    error: `Couldn't check for updates: ${u.error || 'unknown error'}`,
+  }[st] || '';
+  $('updateStatus').textContent = msg;
+  $('updateProgress').hidden = st !== 'downloading';
+  $('updateBar').style.width = `${u.progress || 0}%`;
+  $('updateCheck').disabled = st === 'checking' || st === 'downloading';
+  const act = $('updateAction');
+  act.hidden = !['available', 'ready'].includes(st);
+  act.textContent = st === 'ready' ? 'Restart to update' : (u.canInstall ? 'Download update' : 'Open download page');
+  document.querySelector('.update-card').classList.toggle('highlight', st === 'available' || st === 'ready');
+  $('updateDot').hidden = !(st === 'available' || st === 'ready');
+}
+let lastUpdate = null;
+$('updateCheck').addEventListener('click', () => window.om.update.check());
+$('updateAction').addEventListener('click', () => {
+  if (lastUpdate && lastUpdate.status === 'ready') window.om.update.install();
+  else window.om.update.download();
+});
+$('autoUpdateCheck').addEventListener('change', (e) => { state.settings.autoUpdateCheck = e.target.checked; window.om.set('autoUpdateCheck', e.target.checked); });
+window.om.update.onState((u) => { lastUpdate = u; renderUpdate(u); });
+window.om.update.get().then((u) => { lastUpdate = u; renderUpdate(u); });
+
+function gotoSection(id) {
+  const sec = document.getElementById(id);
+  if (!sec) return;
+  main.style.scrollBehavior = 'auto';
+  sec.scrollIntoView();
+  main.style.scrollBehavior = '';
+  const link = links.find((a) => a.getAttribute('href') === '#' + id);
+  if (link) { clickedLink = link; setActive(link); clearTimeout(clickTimer); clickTimer = setTimeout(() => { clickedLink = null; }, 900); }
+}
+window.om.onGoto(gotoSection);
+
 // ------------------------------------------------------------------ init
 function render(s) {
   state = s;
@@ -304,6 +350,7 @@ function render(s) {
   $('popups').checked = s.settings.popups;
   $('soundWhenActive').checked = s.settings.soundWhenActive;
   $('reactions').checked = s.settings.reactions;
+  $('autoUpdateCheck').checked = s.settings.autoUpdateCheck;
   $('closeToTray').checked = s.settings.closeToTray;
   $('startMinimized').checked = s.settings.startMinimized;
   $('startWithWindows').checked = s.settings.startWithWindows;
@@ -315,5 +362,5 @@ function render(s) {
 }
 
 drawWheel();
-window.om.get().then(render);
+window.om.get().then((s) => { render(s); if (location.hash) setTimeout(() => gotoSection(location.hash.slice(1)), 50); });
 window.om.onState((s) => render(s));

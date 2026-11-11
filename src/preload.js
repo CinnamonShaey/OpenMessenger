@@ -93,18 +93,28 @@ ipcRenderer.on('om:background', (_e, on) => {
 });
 
 // Ctrl + mouse wheel zoom. Handled here (not only via Electron's 'zoom-changed')
-// so it works reliably; touchpad scrolls are accumulated into whole steps.
+// so it works reliably. A mouse-wheel notch is always exactly one zoom step,
+// whatever the display scaling or current zoom (wheelDeltaY is ±120 per notch).
+// Touchpads send many small deltas, which are added up into steps.
 let wheelAcc = 0;
 let wheelTimer = 0;
 window.addEventListener('wheel', (e) => {
   if (!e.ctrlKey) return;
   e.preventDefault();
-  wheelAcc += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY; // lines -> pixels
+  // Chrome divides wheel deltas by the current zoom, so undo that first.
+  const raw = (e.wheelDeltaY || -e.deltaY) * webFrame.getZoomFactor(); // + = zoom in
+  if (!raw) return;
+  const notches = Math.round(raw / 120);
+  if (notches !== 0 && Math.abs(raw / 120 - notches) < 0.05) { // a real mouse wheel
+    for (let i = 0; i < Math.abs(notches); i++) ipcRenderer.send('om:zoom', notches > 0 ? 1 : -1);
+    return;
+  }
+  wheelAcc += raw; // touchpad / smooth scrolling
   clearTimeout(wheelTimer);
-  wheelTimer = setTimeout(() => { wheelAcc = 0; }, 300);
-  while (Math.abs(wheelAcc) >= 100) {
-    ipcRenderer.send('om:zoom', wheelAcc < 0 ? 1 : -1);
-    wheelAcc -= Math.sign(wheelAcc) * 100;
+  wheelTimer = setTimeout(() => { wheelAcc = 0; }, 800);
+  while (Math.abs(wheelAcc) >= 120) {
+    ipcRenderer.send('om:zoom', wheelAcc > 0 ? 1 : -1);
+    wheelAcc -= Math.sign(wheelAcc) * 120;
   }
 }, { passive: false, capture: true });
 

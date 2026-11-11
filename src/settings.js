@@ -16,6 +16,7 @@ const defaults = {
   popups: true,             // show desktop notification pop-ups
   soundWhenActive: false,   // also play the sound while OpenMessenger is the active window
   reactions: true,          // notify when someone reacts to your message
+  autoUpdateCheck: true,    // check GitHub for new versions on start and every 6 hours
   closeToTray: true,
   startMinimized: false,
   spellcheckLanguages: ['en-US', 'da'],

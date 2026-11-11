@@ -13,6 +13,7 @@
     <a href="#accent">Accent color</a>
     <a href="#notifications">Notifications</a>
     <a href="#behavior">Behavior</a>
+    <a href="#updates">Updates <span class="dot" id="updateDot" hidden></span></a>
     <div class="version" id="version"></div>
   </nav>
 
@@ -131,6 +132,26 @@
         <button class="ghost" id="shortcut">Create desktop shortcut</button>
         <button class="ghost" data-open="data">Open data folder</button>
       </div>
+    </section>
+
+    <section id="updates">
+      <h1>Updates</h1>
+      <div class="update-card">
+        <div class="update-info">
+          <div class="update-title" id="updateTitle">OpenMessenger</div>
+          <div class="hint" id="updateStatus"></div>
+          <div class="progress" id="updateProgress" hidden><div id="updateBar"></div></div>
+        </div>
+        <div class="update-actions">
+          <button class="ghost" id="updateCheck">Check for updates</button>
+          <button id="updateAction" hidden></button>
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="autoUpdateCheck">
+        <span class="switch"></span>
+        <span><strong>Check for updates automatically</strong><small>When OpenMessenger starts and every 6 hours. This only contacts GitHub, where OpenMessenger is published.</small></span>
+      </label>
     </section>
   </main>
 

@@ -31,6 +31,8 @@ jobs:
           name: dist-${{ matrix.os }}
           path: |
             dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest*.yml
             dist/*.zip
             dist/*.AppImage
             dist/*.tar.gz

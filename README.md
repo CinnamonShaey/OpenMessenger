@@ -52,6 +52,8 @@ Messenger's features, calls included, the same as in a browser.
   whenever OpenMessenger isn't the active window (click one to open that chat), optional
   notifications when someone reacts to your message, an unread count on the taskbar icon, a tray
   icon, close-to-tray, and a **Settings** entry when you right-click the taskbar icon.
+- **In-app updates.** OpenMessenger tells you when a new version is out. With the installer, it
+  downloads and installs it for you. Your data is kept.
 - **Self-contained.** Installer or portable zip, the app and all its data live in one folder.
   Nothing is spread around your system (see *Uninstalling*).
 - **Optional start with Windows.** Off by default, with an option to start minimized to the tray.
@@ -80,7 +82,9 @@ Messenger's features, calls included, the same as in a browser.
 Either way, the app and **all its data** (login, settings, themes and sounds) live together in one
 folder. The data is in its `data` subfolder.
 
-**Updating:** run the new installer. It keeps your `data` folder. With the zip, quit OpenMessenger
+**Updating:** OpenMessenger checks for new versions itself (Settings → Updates). With the installer,
+click **Download update** and then **Restart to update**. Your `data` folder is kept. You can also
+just run a newer installer. With the zip, the app tells you about new versions; quit OpenMessenger
 (tray icon → Quit) and extract the new version over the old folder.
 
 **Moving from the zip to the installer:** install, then **quit OpenMessenger completely** (tray
@@ -120,6 +124,7 @@ from the menu bar (press `Alt`):
 | Accent color | Color wheel, brightness, hex/RGB, presets, pick-from-screen, "use theme's suggestion", recolor chats |
 | Notifications | Pop-up notifications on/off, reaction notifications on/off, sound while the app is active on/off, pick a sound (click to hear it), volume, play button, open the sounds folder |
 | Behavior | Close button hides to tray, start with Windows, start minimized, desktop shortcut, open the data folder |
+| Updates | Current version, check for updates, download and restart to update, automatic checks on/off |
 
 Other shortcuts: zoom with `Ctrl + scroll wheel` or `Ctrl +` / `Ctrl -` (`Ctrl 0` resets, and
 the zoom level is remembered), reload the theme with `Ctrl+Shift+R`,
@@ -151,9 +156,10 @@ developer tools with `Ctrl+Shift+I`.
 - **Your password is never stored.** Like a browser, the app keeps Messenger's login session
   cookie. In release builds that cookie is **encrypted** with your Windows account (DPAPI), so a
   copied `data` folder can't be used to log in on another PC or user account.
-- **OpenMessenger adds no telemetry.** The app itself collects nothing and sends nothing anywhere.
-  It only loads Meta's own Messenger/Facebook pages, and links to other sites open in your normal
-  browser.
+- **OpenMessenger adds no telemetry.** The app itself collects nothing and sends nothing about you.
+  It loads Meta's own Messenger/Facebook pages, and links to other sites open in your normal
+  browser. The only other connection is the **update check** to GitHub, where OpenMessenger is
+  published. It sends no personal data, and you can turn it off in Settings → Updates.
 - **Meta's own tracking is untouched.** Messenger is Meta's web client running as-is, so whatever
   data collection Meta does on messenger.com in a browser happens here too. OpenMessenger doesn't
   block or change it.
@@ -213,6 +219,7 @@ src/theme.js            theme loading (@extends chains) + generated accent layer
 src/color.js            color math + CSS-filter solver
 src/settings-ui/        the Settings and screen-share picker windows (served from a private om:// scheme)
 src/paths.js            where data is stored (portable on Windows)
+src/updater.js          in-app updates (electron-updater for installs, release check for the zip)
 src/settings.js         data/settings.json
 themes/                 built-in themes (see themes/README.md)
 assets/                 icon, tray icon, unread badges, built-in sounds
