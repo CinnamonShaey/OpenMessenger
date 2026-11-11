@@ -42,9 +42,24 @@
     "win": {
       "icon": "assets/icon.ico",
       "target": [
+        "nsis",
         "zip"
       ],
       "artifactName": "OpenMessenger-${version}-win-${arch}-portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "OpenMessenger",
+      "uninstallDisplayName": "OpenMessenger",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "OpenMessenger-Setup-${version}.${ext}"
     },
     "mac": {
       "icon": "assets/icon.png",

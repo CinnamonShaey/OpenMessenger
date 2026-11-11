@@ -52,9 +52,8 @@ Messenger's features, calls included, the same as in a browser.
   whenever OpenMessenger isn't the active window (click one to open that chat), optional
   notifications when someone reacts to your message, an unread count on the taskbar icon, a tray
   icon, close-to-tray, and a **Settings** entry when you right-click the taskbar icon.
-- **Portable on Windows.** Your login, settings, themes and sounds live in a `data` folder next
-  to `OpenMessenger.exe`. Outside that folder, the app only writes two small registry entries
-  (see *Uninstalling*).
+- **Self-contained.** Installer or portable zip, the app and all its data live in one folder.
+  Nothing is spread around your system (see *Uninstalling*).
 - **Optional start with Windows.** Off by default, with an option to start minimized to the tray.
 - **Your own CSS themes.** They reload live while you edit them.
 - **Screen-share picker.** When you share your screen in a call, pick a screen or window from live
@@ -64,30 +63,44 @@ Messenger's features, calls included, the same as in a browser.
 
 ## Install (Windows)
 
-1. Download the Windows `.zip` from [Releases](../../releases).
-2. Extract it to a folder of your choice.
-3. Run `OpenMessenger.exe` and log in to Messenger.
-4. Optional: **Settings → Behavior → Create desktop shortcut**.
+**Installer (recommended):**
+
+1. Download `OpenMessenger-Setup-x.y.z.exe` from [Releases](../../releases) and run it.
+2. Choose where to install it. The default is your user folder, which doesn't need admin rights.
+   Avoid *Program Files*: it's write-protected, so OpenMessenger couldn't keep its data there.
+3. Log in to Messenger. Desktop and Start Menu shortcuts are created for you.
+
+**Portable zip:** download the Windows `.zip`, extract it to a folder of your choice, and run
+`OpenMessenger.exe`. Extract it first: running it from inside the zip loses your login.
 
 > [!NOTE]
 > The app isn't code-signed, so Windows SmartScreen may say
 > *"Windows protected your PC"* the first time. Click **More info → Run anyway**.
 
-**Updating:** close OpenMessenger (tray icon → Quit), then extract the new version over the old
-folder. Your `data` folder, including your login, is kept.
+Either way, the app and **all its data** (login, settings, themes and sounds) live together in one
+folder. The data is in its `data` subfolder.
 
-**Uninstalling:** turn off *Start with Windows* if you enabled it, quit the app, then delete the
-folder (and the desktop shortcut, if you made one).
+**Updating:** run the new installer. It keeps your `data` folder. With the zip, quit OpenMessenger
+(tray icon → Quit) and extract the new version over the old folder.
 
-Outside its folder, OpenMessenger only writes two small registry entries under your user account:
+**Moving from the zip to the installer:** install, then **quit OpenMessenger completely** (tray
+icon → Quit, including the copy the installer opens at the end). Then copy your old `data` folder
+into the new install folder, replacing the new one. If OpenMessenger is still running, it keeps
+its own empty login and you'll have to log in again.
+
+**Uninstalling:** with the installer, use *Settings → Apps → OpenMessenger*. It asks whether to
+delete your data too, and removes OpenMessenger's registry entries. With the zip, turn off
+*Start with Windows* if you enabled it, quit the app, and delete the folder.
+
+Outside its folder, OpenMessenger only writes a few small entries under your user account:
 
 - `HKCU\Software\Classes\AppUserModelId\io.github.cinnamonshaey.openmessenger` gives the app's
-  name and icon to Windows, which needs it to show notifications from apps that aren't installed
-  with an installer. It's harmless to leave, or you can delete it in `regedit` for a fully clean
-  removal.
+  name and icon to Windows, which needs it to show notifications.
 - The *Start with Windows* entry, only if you turned that on. Turning it off removes it.
+- With the installer: the Settings → Apps entry and the shortcuts.
 
-Windows also keeps its own small records, like your notification preferences for the app.
+The uninstaller removes all of these. Windows also keeps its own small records, like your
+notification preferences for the app.
 
 ### macOS and Linux (experimental)
 

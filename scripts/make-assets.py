@@ -68,6 +68,36 @@ icon.save(ASSETS / "icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (6
 make_icon(32).save(ASSETS / "tray.png")
 
 
+# ---------------------------------------------------------------- installer sidebar
+# NSIS welcome/finish sidebar: 164x314, 24-bit BMP. Lives in build/ (electron-builder's
+# default buildResources folder, picked up automatically).
+def make_sidebar():
+    W, H = 164, 314
+    BUILD = ROOT / "build"
+    BUILD.mkdir(exist_ok=True)
+    s = 3
+    img = Image.new("RGB", (W * s, H * s))
+    px = img.load()
+    top, bottom = (24, 8, 44), (8, 6, 14)
+    for y in range(H * s):
+        t = y / (H * s)
+        for x in range(W * s):
+            # soft purple glow from the top-left over a near-black base
+            glow = max(0.0, 1 - (((x / (W * s)) ** 2 + (y / (H * s * 0.75)) ** 2) ** 0.5))
+            base = tuple(int(top[i] * (1 - t) + bottom[i] * t) for i in range(3))
+            px[x, y] = tuple(min(255, int(base[i] + glow * glow * (PURPLE_B[i] - base[i]) * 0.9)) for i in range(3))
+    ic = make_icon(96 * s)
+    img.paste(ic, ((W * s - ic.width) // 2, 70 * s), ic)
+    d = ImageDraw.Draw(img)
+    f = font(20 * s)
+    label = "OpenMessenger"
+    box = d.textbbox((0, 0), label, font=f)
+    d.text(((W * s - (box[2] - box[0])) / 2 - box[0], 186 * s), label, font=f, fill=(236, 236, 241))
+    img = img.resize((W, H), Image.LANCZOS)
+    img.save(BUILD / "installerSidebar.bmp")
+    img.save(BUILD / "uninstallerSidebar.bmp")
+
+
 # ---------------------------------------------------------------- badges
 def font(px):
     for name in ("segoeuib.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf"):
@@ -151,5 +181,7 @@ write_wav(SOUNDS / "chime.wav", mix((0, tone(1318.5, 0.6, 7, harmonics=bell, att
 soft = ((1, 1), (2, 0.08))
 write_wav(SOUNDS / "soft.wav", mix((0, tone(587, 0.25, 18, harmonics=soft, attack=0.015)),
                                     (0.12, tone(784, 0.3, 16, harmonics=soft, attack=0.015))), level=0.5)
+
+make_sidebar()  # after font() is defined
 
 print("assets written to", ASSETS)
